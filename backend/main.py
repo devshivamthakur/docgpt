@@ -4,8 +4,10 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.auth import router as auth_router
+from app.api.documents import router as documents_router
 from app.core.auth_middleware import AuthMiddleware
 from app.core.logging import configure_logging
+from fastapi.middleware.cors import CORSMiddleware
 from app.core.exceptions import (
     AppException,
     app_exception_handler,
@@ -15,7 +17,7 @@ from app.core.exceptions import (
 )
 from app.db.base import Base
 from app.db.session import engine
-
+from app.core.config import settings
 configure_logging()
 logger = logging.getLogger(__name__)
 
@@ -34,25 +36,23 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="DocGPT API",
       version="0.1.0", 
-      lifespan=lifespan,
-      
-              
-              )
+      lifespan=lifespan)
 
 # ── Middleware ──────────────────────────────────────────────────────────
 app.add_middleware(AuthMiddleware)
+app.add_middleware(CORSMiddleware, allow_origins=[settings.cors_origins], allow_methods=["*"], allow_headers=["*"])
 
 # ── Exception handlers — every response uses {"message": "..."} ─────────
 app.add_exception_handler(AppException, app_exception_handler)
 app.add_exception_handler(StarletteHTTPException, http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(Exception, general_exception_handler)
-
 # ── Routers ─────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api")
-
-
+app.include_router(documents_router, prefix="/api")
 @app.get("/health")
 def health_check():
     """Health-check endpoint."""
     return {"status": "ok"}
+# ── Import models so they are registered with SQLAlchemy metadata ──────
+import app.models.document  # noqa: F401

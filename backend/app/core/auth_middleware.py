@@ -25,6 +25,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
     })
 
     async def dispatch(self, request: Request, call_next):
+        # Skip auth for WebSocket upgrade requests — they authenticate via query param
+        if request.headers.get("upgrade", "").lower() == "websocket":
+            return await call_next(request)
+
         if request.url.path in self.PUBLIC_PATHS:
             return await call_next(request)
 
