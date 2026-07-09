@@ -1,0 +1,74 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: docgpt-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: docgpt
+      POSTGRES_USER: docgpt
+      POSTGRES_PASSWORD: docgpt
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docgpt"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - docgpt
+
+  redis:
+    image: redis:7-alpine
+    container_name: docgpt-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - docgpt
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docgpt-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - venv_data:/app/.venv
+    develop:
+      watch:
+        - path: ./app
+          action: sync
+        - path: ./main.py
+          action: sync
+        - path: ./pyproject.toml
+          action: rebuild
+    networks:
+      - docgpt
+
+networks:
+  docgpt:
+    name: docgpt-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: docgpt-postgres-data
+  venv_data:
+    name: docgpt-venv

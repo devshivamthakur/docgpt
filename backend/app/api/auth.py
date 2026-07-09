@@ -1,0 +1,32 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.middleware import get_current_user
+from app.core.security import create_access_token, create_refresh_token
+from app.db.session import get_db
+from app.schemas.auth import TokenResponse, UserLogin, UserOut, UserRegister
+from app.services.user_service import UserService
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/register", response_model=UserOut, status_code=201)
+async def register_user(payload: UserRegister, db: AsyncSession = Depends(get_db)):
+    """Register a new user."""
+    service = UserService(db)
+    return await service.create_user(str(payload.email), payload.password, payload.full_name)
+
+
+@router.post("/login", response_model=TokenResponse)
+async def login_user(payload: UserLogin, db: AsyncSession = Depends(get_db)):
+    """Authenticate a user and return JWT tokens."""
+    service = UserService(db)
+    user = await service.authenticate(str(payload.email), payload.password)
+    access_token = create_access_token(str(user.id))
+    refresh_token = create_refresh_token(str(user.id))
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+
+
+@router.get("/me", response_model=UserOut)
+async def get_me(current_user=Depends(get_current_user)):
+    """Return the currently authenticated user."""
+    return current_user
