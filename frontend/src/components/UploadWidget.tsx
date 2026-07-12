@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { FileUp, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { useDocumentStore } from '../store/documentStore';
 
@@ -15,10 +15,10 @@ const MAX_SIZE_MB = 50;
 
 interface UploadWidgetProps {
   onUploadStart?: () => void;
-  onUploadComplete?: () => void;
+  onUploadComplete?: (docId?: number) => void;
 }
 
-export default function UploadWidget({ onUploadStart, onUploadComplete }: UploadWidgetProps) {
+function UploadWidget({ onUploadStart, onUploadComplete }: UploadWidgetProps) {
   const uploadDocument = useDocumentStore((s) => s.uploadDocument);
   const isUploading = useDocumentStore((s) => s.isUploading);
 
@@ -47,8 +47,8 @@ export default function UploadWidget({ onUploadStart, onUploadComplete }: Upload
       }
       try {
         onUploadStart?.();
-        await uploadDocument(file);
-        onUploadComplete?.();
+        const doc = await uploadDocument(file);
+        onUploadComplete?.(doc?.id);
       } catch (err: any) {
         setError(err.message || 'Upload failed');
       }
@@ -76,14 +76,29 @@ export default function UploadWidget({ onUploadStart, onUploadComplete }: Upload
     setIsDragOver(false);
   }, []);
 
-  const handleClick = () => inputRef.current?.click();
+  const handleClick = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) handleFile(file);
-    // Reset so the same file can be re-uploaded
-    e.target.value = '';
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) handleFile(file);
+      // Reset so the same file can be re-uploaded
+      e.target.value = '';
+    },
+    [handleFile],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleClick();
+      }
+    },
+    [handleClick],
+  );
 
   return (
     <div className="space-y-3">
@@ -94,7 +109,7 @@ export default function UploadWidget({ onUploadStart, onUploadComplete }: Upload
         onClick={handleClick}
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleClick(); }}
+        onKeyDown={handleKeyDown}
         className={`
           relative cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center
           transition-all duration-200
@@ -148,3 +163,5 @@ export default function UploadWidget({ onUploadStart, onUploadComplete }: Upload
     </div>
   );
 }
+
+export default React.memo(UploadWidget);

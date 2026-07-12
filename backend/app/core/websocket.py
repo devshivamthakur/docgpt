@@ -4,6 +4,7 @@ import logging
 
 import redis.asyncio as aioredis
 from fastapi import WebSocket
+from starlette.websockets import WebSocketDisconnect, WebSocketState
 
 from app.core.config import settings
 
@@ -17,7 +18,9 @@ class ConnectionManager:
         self.active_connections: dict[int, set[WebSocket]] = {}
 
     async def connect(self, document_id: int, websocket: WebSocket) -> None:
-        await websocket.accept()
+        # Only accept if not already accepted
+        if websocket.client_state == WebSocketState.CONNECTING:
+            await websocket.accept()
         self.active_connections.setdefault(document_id, set()).add(websocket)
         logger.info("WS connected for document %s (%d active)", document_id, len(self.active_connections[document_id]))
 
@@ -73,6 +76,9 @@ async def listen_redis_progress(document_id: int, websocket: WebSocket) -> None:
                 # Terminal states — close the subscription
                 if data.get("status") in ("ready", "failed"):
                     break
+            except (WebSocketDisconnect, RuntimeError):
+                # Client disconnected or already closed — stop listening
+                break
             except Exception:
                 logger.exception("Error forwarding Redis message to WS")
     except Exception:

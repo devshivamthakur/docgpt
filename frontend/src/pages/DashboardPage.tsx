@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Upload, FileText, LogOut, User } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useDocumentStore } from '../store/documentStore';
@@ -9,9 +9,20 @@ function DashboardPage() {
   const { user, logout } = useAuthStore();
   const fetchDocuments = useDocumentStore((s) => s.fetchDocuments);
 
+  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
+
   useEffect(() => {
     fetchDocuments();
-  }, [fetchDocuments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleUploadComplete = useCallback(
+    (docId?: number) => {
+      fetchDocuments();
+      if (docId) setSelectedDocId(docId);
+    },
+    [fetchDocuments],
+  );
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,211,238,0.18),_transparent_40%),linear-gradient(135deg,_#020617,_#0f172a)] text-white">
@@ -53,7 +64,7 @@ function DashboardPage() {
             </div>
           </div>
           <div className="mt-5">
-            <UploadWidget onUploadComplete={fetchDocuments} />
+            <UploadWidget onUploadComplete={handleUploadComplete} />
           </div>
         </section>
 
@@ -71,7 +82,10 @@ function DashboardPage() {
             </div>
           </div>
           <div className="mt-5">
-            <DocumentGrid />
+            <DocumentGrid
+              selectedDocId={selectedDocId}
+              onSelectDoc={setSelectedDocId}
+            />
           </div>
         </section>
       </div>

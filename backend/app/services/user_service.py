@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.core.security import hash_password, verify_password
 from app.core.exceptions import ConflictException, UnauthorizedException
+from app.core.redis_cache import cached
 
 
 class UserService:
@@ -30,5 +31,6 @@ class UserService:
             raise UnauthorizedException("Invalid email or password")
         return user
 
+    @cached(ttl=3600, soft_ttl=60)
     async def get_by_id(self, user_id: int) -> User | None:
         return await self.db.get(User, user_id)

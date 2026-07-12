@@ -31,6 +31,31 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         if request.url.path in self.PUBLIC_PATHS:
             return await call_next(request)
+        
+        if request.url.path in "/refresh":
+            #extract refresh token from request body
+            try:
+                body = await request.json()
+                refresh_token = body.get("refresh_token")
+                if not refresh_token:
+                    logger.warning("Missing refresh token: %s", request.url.path)
+                    return JSONResponse(
+                        status_code=401,
+                        content={"message": "Missing refresh token"},
+                    )
+                payload = decode_token(refresh_token)
+                if payload.get("type") != "refresh":
+                    logger.warning("Invalid refresh token type: %s", request.url.path)
+                    return JSONResponse(
+                        status_code=401,
+                        content={"message": "Invalid refresh token"},
+                    )
+            except Exception:
+                logger.warning("Invalid refresh token: %s", request.url.path)
+                return JSONResponse(
+                    status_code=401,
+                    content={"message": "Invalid or expired refresh token"},
+                )
 
         # ── Extract & validate Bearer token ──────────────────────────────
         authorization = request.headers.get("authorization", "")

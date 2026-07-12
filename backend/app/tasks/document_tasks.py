@@ -1,4 +1,4 @@
-"""Celery tasks for asynchronous document processing pipeline.
+"""ARQ tasks for asynchronous document processing pipeline.
 
 Each stage updates the DB record and broadcasts progress via Redis pub/sub
 so that the WebSocket handler can forward it to the frontend in real time.
@@ -6,33 +6,25 @@ so that the WebSocket handler can forward it to the frontend in real time.
 
 import logging
 import time
-from functools import lru_cache
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.models.document import Document, DocumentStatus
-from app.tasks.celery_app import celery_app, publish_progress
+from app.tasks.utils import publish_progress
+from app.services.AIServices.AiDocumentProcess import AiDocumentProcess
+from app.services.AIServices.schemas import ProcessingStage
 
 logger = logging.getLogger(__name__)
 
 
-@lru_cache(maxsize=1)
-def _get_sync_engine():
-    """Lazy-initialized synchronous engine for Celery workers.
-
-    Uses psycopg (v3) instead of the default psycopg2, which is not installed.
-    Created lazily so that import-time DB driver resolution does not fail
-    when the Celery worker process starts before the database is ready.
-    """
-    sync_url = settings.database_url.replace("+asyncpg", "+psycopg")
-    return create_engine(sync_url)
+def _get_sync_engine(ctx: dict):
+    """Return the synchronous DB engine stored in the ARQ worker context."""
+    return ctx["db_engine"]
 
 
-def _update_db(document_id: int, **kwargs) -> None:
+def _update_db(ctx: dict, document_id: int, **kwargs) -> None:
     """Update document fields in the database synchronously."""
-    engine = _get_sync_engine()
+    engine = _get_sync_engine(ctx)
     with Session(engine) as session:
         doc = session.get(Document, document_id)
         if doc is None:
@@ -43,72 +35,53 @@ def _update_db(document_id: int, **kwargs) -> None:
         session.commit()
 
 
-def _simulate_stage(
-    document_id: int,
-    status: DocumentStatus,
-    progress: int,
-    duration: float,
-    message: str,
-) -> None:
-    """Update status, broadcast progress, then sleep to simulate work."""
-    _update_db(document_id, status=status.value, progress=progress)
-    publish_progress(document_id, status.value, progress, message)
-    time.sleep(duration)
+def _make_progress_callback(ctx: dict, document_id: int):
+    """Build a progress callback closure bound to the ARQ worker context."""
+    def _callback(progress_status, _doc_id):
+        _id = document_id
+        if progress_status == ProcessingStage.PARSING:
+            _update_db(ctx, _id, status=DocumentStatus.PARSING.value, progress=25)
+            publish_progress(_id, DocumentStatus.PARSING.value, 25, "Parsing document content…")
+            time.sleep(2.0)
+        elif progress_status == ProcessingStage.CHUNKING:
+            _update_db(ctx, _id, status=DocumentStatus.CHUNKING.value, progress=50)
+            publish_progress(_id, DocumentStatus.CHUNKING.value, 50, "Splitting into semantic chunks…")
+            time.sleep(2.0)
+        elif progress_status == ProcessingStage.EMBEDDING:
+            _update_db(ctx, _id, status=DocumentStatus.EMBEDDING.value, progress=75)
+            publish_progress(_id, DocumentStatus.EMBEDDING.value, 75, "Generating vector embeddings…")
+            time.sleep(2.5)
+        elif progress_status == ProcessingStage.INDEXING:
+            _update_db(ctx, _id, status=DocumentStatus.INDEXING.value, progress=90)
+            publish_progress(_id, DocumentStatus.INDEXING.value, 90, "Adding to vector index…")
+            time.sleep(1.5)
+    return _callback
 
 
-@celery_app.task(bind=True, max_retries=3, default_retry_delay=5)
-def process_document(self, document_id: int) -> None:
+async def process_document(ctx: dict, document_id: int, storage_path: str, original_filename: str) -> None:
     """Run the full document processing pipeline.
 
-    Called immediately after a file is uploaded.
+    Called by the ARQ worker when a job is dequeued.
     Stages: Parsing → Chunking → Embedding → Indexing → Ready
     """
     try:
-        # ── Stage 1: Parsing (extract text + OCR) ────────────────
-        _simulate_stage(
+        callback = _make_progress_callback(ctx, document_id)
+        documentProcessor = AiDocumentProcess(
             document_id,
-            DocumentStatus.PARSING,
-            25,
-            duration=2.0,
-            message="Parsing document content…",
+            storage_path,
+            callback=callback,
+            original_filename=original_filename,
         )
+        documentProcessor.process()
 
-        # ── Stage 2: Chunking (split into semantic chunks) ───────
-        _simulate_stage(
-            document_id,
-            DocumentStatus.CHUNKING,
-            50,
-            duration=2.0,
-            message="Splitting into semantic chunks…",
-        )
-
-        # ── Stage 3: Embedding (generate vectors) ────────────────
-        _simulate_stage(
-            document_id,
-            DocumentStatus.EMBEDDING,
-            75,
-            duration=2.5,
-            message="Generating vector embeddings…",
-        )
-
-        # ── Stage 4: Indexing (add to vector database) ───────────
-        _simulate_stage(
-            document_id,
-            DocumentStatus.INDEXING,
-            90,
-            duration=1.5,
-            message="Adding to vector index…",
-        )
-
-        # ── Done ─────────────────────────────────────────────────
-        _update_db(document_id, status=DocumentStatus.READY.value, progress=100)
+        _update_db(ctx, document_id, status=DocumentStatus.READY.value, progress=100)
         publish_progress(document_id, DocumentStatus.READY.value, 100, "Document ready")
-
         logger.info("Document %s processed successfully", document_id)
 
     except Exception as exc:
         logger.exception("Document %s processing failed", document_id)
         _update_db(
+            ctx,
             document_id,
             status=DocumentStatus.FAILED.value,
             progress=0,
@@ -120,4 +93,4 @@ def process_document(self, document_id: int) -> None:
             0,
             f"Processing failed: {exc}",
         )
-        raise self.retry(exc=exc)
+        raise  # ARQ handles retries via max_tries

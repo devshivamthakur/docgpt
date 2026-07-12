@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import {
   X,
   FileSearch,
@@ -56,7 +56,7 @@ interface ProcessingModalProps {
   onClose: () => void;
 }
 
-export default function ProcessingModal({ docId, onClose }: ProcessingModalProps) {
+function ProcessingModal({ docId, onClose }: ProcessingModalProps) {
   const documents = useDocumentStore((s) => s.documents);
   const liveProgress = useDocumentStore((s) => s.liveProgress);
 
@@ -206,3 +206,5 @@ export default function ProcessingModal({ docId, onClose }: ProcessingModalProps
     </div>
   );
 }
+
+export default React.memo(ProcessingModal);

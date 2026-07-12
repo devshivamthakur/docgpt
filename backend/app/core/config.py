@@ -16,6 +16,14 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
     max_upload_size_mb: int = 4
     upload_dir: str = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
+    OPENAI_API_KEY: str = ""
+    OPENAI_BASE_URL: str = ""
+    OPENAI_MODEL_NAME: str = ""
+    model_provider: str = "openai"
+    HUGGINGFACE_API_TOKEN: str = ""
+    HUGGINGFACE_EMBEDDING_MODEL: str = ""
+    QDRANT_API_KEY: str = ""
+    QDRANT_URL: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="")
 

@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.exceptions import BadRequestException
 from app.core.middleware import get_current_user
+from app.core.redis_cache import cached, invalidate_document_caches
 from app.core.websocket import listen_redis_progress, manager
 from app.db.session import get_db
 from app.models.document import DocumentStatus
@@ -18,7 +19,7 @@ from app.schemas.document import (
     UploadResponse,
 )
 from app.services.document_service import DocumentService
-from app.tasks.document_tasks import process_document
+from app.tasks.arq_app import enqueue_process_document
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ async def upload_document(
     """Upload a document and trigger async processing.
 
     The file is saved to disk, a DB record is created with status="uploaded",
-    and a Celery task is dispatched. The frontend can then open a WebSocket
+    and an ARQ job is enqueued. The frontend can then open a WebSocket
     to track real-time progress.
     """
     # ── Validate file ───────────────────────────────────────────────
@@ -80,8 +81,11 @@ async def upload_document(
     # ── Mark as uploaded & queue processing ─────────────────────────
     await service.mark_uploaded(doc.id)
 
-    # Dispatch Celery task (fire-and-forget)
-    process_document.delay(doc.id)
+    # Dispatch ARQ job (fire-and-forget)
+    await enqueue_process_document(doc.id, storage_path, original_filename=file.filename)
+
+    # Invalidate list cache so the new document appears immediately
+    await invalidate_document_caches(user_id=current_user.id)
 
     logger.info(
         "Document uploaded: id=%s, filename=%s, size=%d, user=%s",
@@ -97,6 +101,7 @@ async def upload_document(
 
 
 @router.get("", response_model=DocumentListResponse)
+@cached(ttl=3600, soft_ttl=60)
 async def list_documents(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
@@ -117,6 +122,7 @@ async def list_documents(
 
 
 @router.get("/{doc_id}", response_model=DocumentResponse)
+@cached(ttl=3600, soft_ttl=60)
 async def get_document(
     doc_id: int,
     db: AsyncSession = Depends(get_db),
@@ -137,6 +143,7 @@ async def delete_document(
     """Delete a document and its file."""
     service = DocumentService(db)
     await service.delete_document(doc_id, current_user.id)
+    await invalidate_document_caches(user_id=current_user.id)
     return DeleteResponse(message="Document deleted successfully")
 
 
@@ -168,18 +175,24 @@ async def document_progress_ws(
         await websocket.close(code=4001, reason="Invalid token")
         return
 
-    doc = await db.get(__import__("app.models.document", fromlist=["Document"]).Document, doc_id)
-    if not doc or doc.user_id != user_id:
+    service = DocumentService(db)
+    try:
+        doc = await service.get_document(doc_id)
+    except Exception:
         await websocket.close(code=4004, reason="Document not found")
         return
 
-    # ── Accept connection and start listening for Redis updates ─────
-    await manager.connect(doc_id, websocket)
+    if doc.user_id != user_id:
+        await websocket.close(code=4004, reason="Document not found")
+        return
 
+    # ── Wrap everything in try so accept errors are caught ─────────
     try:
+        await manager.connect(doc_id, websocket)
+
         # Send current state immediately
         await websocket.send_json({
-            "status": doc.status.value,
+            "status": doc.status,
             "progress": doc.progress,
             "message": "",
         })
@@ -188,11 +201,15 @@ async def document_progress_ws(
         if doc.status in (DocumentStatus.READY, DocumentStatus.FAILED):
             return
 
-        # Listen for Redis pub/sub updates from the Celery task
+        # Listen for Redis pub/sub updates from the ARQ worker
         await listen_redis_progress(doc_id, websocket)
 
     except WebSocketDisconnect:
         logger.info("WS disconnected for document %s", doc_id)
+    except RuntimeError as e:
+        # "Expected ASGI message 'websocket.send' or 'websocket.close'…"
+        # happens when the socket is already closed/accepted — just log and exit
+        logger.warning("WS runtime error for document %s: %s", doc_id, e)
     except Exception:
         logger.exception("WS error for document %s", doc_id)
     finally:

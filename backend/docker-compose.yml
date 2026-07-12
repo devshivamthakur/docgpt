@@ -64,6 +64,27 @@ services:
     networks:
       - docgpt
 
+  arq_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docgpt-arq-worker
+    restart: unless-stopped
+    command: >
+      uv run python -m arq app.tasks.arq_app.WorkerSettings
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - venv_data:/app/.venv
+    networks:
+      - docgpt
+
 networks:
   docgpt:
     name: docgpt-network

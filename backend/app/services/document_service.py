@@ -106,7 +106,7 @@ class DocumentService:
         progress: int,
         error_message: str | None = None,
     ) -> Document:
-        """Update document status and progress (used by Celery tasks)."""
+        """Update document status and progress (used by ARQ worker)."""
         doc = await self.db.get(Document, doc_id)
         if not doc:
             raise NotFoundException("Document not found")

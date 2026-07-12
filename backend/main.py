@@ -18,6 +18,7 @@ from app.core.exceptions import (
 from app.db.base import Base
 from app.db.session import engine
 from app.core.config import settings
+from app.tasks.arq_app import init_arq_pool, shutdown_arq_pool
 configure_logging()
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,12 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
+    # Initialise ARQ Redis pool for job enqueuing
+    await init_arq_pool()
+    logger.info("ARQ Redis pool initialised")
     yield
+    await shutdown_arq_pool()
+    logger.info("ARQ Redis pool closed")
     logger.info("Shutting down DocGPT API")
 
 
@@ -40,7 +46,8 @@ app = FastAPI(
 
 # ── Middleware ──────────────────────────────────────────────────────────
 app.add_middleware(AuthMiddleware)
-app.add_middleware(CORSMiddleware, allow_origins=[settings.cors_origins], allow_methods=["*"], allow_headers=["*"])
+print("CORS origins:", settings.cors_origins)
+app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["*"], allow_headers=["*"])
 
 # ── Exception handlers — every response uses {"message": "..."} ─────────
 app.add_exception_handler(AppException, app_exception_handler)
@@ -55,4 +62,4 @@ def health_check():
     """Health-check endpoint."""
     return {"status": "ok"}
 # ── Import models so they are registered with SQLAlchemy metadata ──────
-import app.models.document  # noqa: F401
+from app.models import document  # noqa: F401

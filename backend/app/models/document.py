@@ -5,6 +5,7 @@ from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
+from app.models.user import User  # noqa: F401 — ensures User is registered before Document mapper configures
 
 
 class DocumentStatus(str, enum.Enum):

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   FileText,
   Trash2,
@@ -56,7 +56,7 @@ const STATUS_BADGE: Record<DocumentStatus, { icon: React.ReactNode; className: s
 
 // ── Progress bar ─────────────────────────────────────────────────────
 
-function ProgressBar({ progress, status }: { progress: number; status: DocumentStatus }) {
+const ProgressBar = React.memo(function ProgressBar({ progress, status }: { progress: number; status: DocumentStatus }) {
   const isTerminal = status === 'ready' || status === 'failed';
   const color =
     status === 'failed'
@@ -73,7 +73,7 @@ function ProgressBar({ progress, status }: { progress: number; status: DocumentS
       />
     </div>
   );
-}
+});
 
 // ── Format helpers ───────────────────────────────────────────────────
 
@@ -90,7 +90,7 @@ function formatDate(iso: string): string {
 
 // ── DocumentCard ─────────────────────────────────────────────────────
 
-function DocumentCard({
+const DocumentCard = React.memo(function DocumentCard({
   doc,
   onDelete,
   onClick,
@@ -99,12 +99,29 @@ function DocumentCard({
   onDelete: (id: number) => void;
   onClick: (id: number) => void;
 }) {
-  const badge = STATUS_BADGE[doc.status];
-  const isProcessing = !['ready', 'failed', 'uploading'].includes(doc.status);
+  const { badge, isProcessing } = useMemo(
+    () => ({
+      badge: STATUS_BADGE[doc.status],
+      isProcessing: !['ready', 'failed', 'uploading'].includes(doc.status),
+    }),
+    [doc.status],
+  );
+
+  const handleCardClick = useCallback(() => {
+    onClick(doc.id);
+  }, [doc.id, onClick]);
+
+  const handleDeleteClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete(doc.id);
+    },
+    [doc.id, onDelete],
+  );
 
   return (
     <div
-      onClick={() => onClick(doc.id)}
+      onClick={handleCardClick}
       className="group relative cursor-pointer rounded-2xl border border-slate-800 bg-slate-900/80 p-5 transition-all hover:border-slate-700 hover:bg-slate-900/95 hover:shadow-lg"
     >
       {/* Header */}
@@ -124,7 +141,7 @@ function DocumentCard({
         </div>
 
         <button
-          onClick={(e) => { e.stopPropagation(); onDelete(doc.id); }}
+          onClick={handleDeleteClick}
           className="shrink-0 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/15 hover:text-red-400 group-hover:opacity-100"
           title="Delete document"
         >
@@ -163,23 +180,38 @@ function DocumentCard({
       )}
     </div>
   );
-}
+});
 
 // ── DocumentGrid ─────────────────────────────────────────────────────
 
-export default function DocumentGrid() {
+interface DocumentGridProps {
+  selectedDocId: number | null;
+  onSelectDoc: (id: number | null) => void;
+}
+
+export default function DocumentGrid({ selectedDocId, onSelectDoc }: DocumentGridProps) {
   const documents = useDocumentStore((s) => s.documents);
   const isLoading = useDocumentStore((s) => s.isLoading);
   const deleteDocument = useDocumentStore((s) => s.deleteDocument);
 
-  const [selectedDocId, setSelectedDocId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState<Set<number>>(new Set());
 
-  const handleDelete = async (id: number) => {
-    setDeleting((prev) => new Set(prev).add(id));
-    await deleteDocument(id);
-    setDeleting((prev) => { const next = new Set(prev); next.delete(id); return next; });
-  };
+  const handleDelete = useCallback(
+    async (id: number) => {
+      setDeleting((prev) => new Set(prev).add(id));
+      await deleteDocument(id);
+      setDeleting((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    },
+    [deleteDocument],
+  );
+
+  const handleCloseModal = useCallback(() => {
+    onSelectDoc(null);
+  }, [onSelectDoc]);
 
   if (isLoading) {
     return (
@@ -210,7 +242,7 @@ export default function DocumentGrid() {
             key={doc.id}
             doc={doc}
             onDelete={handleDelete}
-            onClick={setSelectedDocId}
+            onClick={onSelectDoc}
           />
         ))}
       </div>
@@ -218,7 +250,7 @@ export default function DocumentGrid() {
       {/* Processing detail modal */}
       <ProcessingModal
         docId={selectedDocId}
-        onClose={() => setSelectedDocId(null)}
+        onClose={handleCloseModal}
       />
     </>
   );

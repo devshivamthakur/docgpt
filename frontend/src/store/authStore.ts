@@ -31,6 +31,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { data } = await api.post('/auth/login', { email, password });
       const token: string = data.access_token;
       localStorage.setItem('docgpt-token', token);
+      localStorage.setItem('refresh-token', data.refresh_token);
       set({ token, isAuthenticated: true, isLoading: false });
     } catch (err: any) {
       const message = err.normalizedMessage || 'Login failed';
@@ -48,6 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       await api.post('/auth/login', { email, password }).then((res) => {
         const token: string = res.data.access_token;
         localStorage.setItem('docgpt-token', token);
+        localStorage.setItem('refresh-token', res.data.refresh_token);
         set({ token, isAuthenticated: true, isLoading: false, user: data });
       });
     } catch (err: any) {
@@ -60,6 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   /* ── Logout ───────────────────────────────────────────────────── */
   logout: () => {
     localStorage.removeItem('docgpt-token');
+    localStorage.removeItem('refresh-token');
     set({ token: null, user: null, isAuthenticated: false, error: null });
   },
 

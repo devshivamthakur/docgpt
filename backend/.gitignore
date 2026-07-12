@@ -12,3 +12,5 @@ build/
 .mypy_cache/
 uploads/
 *.db
+
+# celerybeat-schedule entries removed — migrated from Celery to ARQ
