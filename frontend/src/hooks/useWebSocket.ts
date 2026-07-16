@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useDocumentStore, type ProgressPayload } from '../store/documentStore';
+import { getAccessToken } from '../store/api';
 
 const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/api';
 
@@ -15,11 +16,11 @@ export function useDocumentProgress(docId: number | null) {
 
   // ── Refs (no re-render when they change) ───────────────────────
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout>>();
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intentionalClose = useRef(false);
   const docIdRef = useRef(docId);
   const mountedRef = useRef(false);
-  const connectRef = useRef<() => void>();
+  const connectRef = useRef<(() => void) | null>(null);
 
   docIdRef.current = docId;
 
@@ -40,15 +41,23 @@ export function useDocumentProgress(docId: number | null) {
     }
 
     // ── Auth check ──────────────────────────────────────────────
-    const token = localStorage.getItem('docgpt-token');
+    const token = getAccessToken();
     if (!token) return;
 
     // ── Open connection ──────────────────────────────────────────
     intentionalClose.current = false;
 
-    const url = `${WS_BASE}/documents/${id}/progress-ws?token=${encodeURIComponent(token)}`;
+    // Use protocol-based auth instead of query-param to avoid
+    // token leaking in server logs / referrer headers
+    const url = `${WS_BASE}/documents/${id}/progress-ws`;
     const ws = new WebSocket(url);
     wsRef.current = ws;
+
+    // Send auth token as the first message (server validates before
+    // sending any progress data)
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ type: 'auth', token }));
+    };
 
     ws.onmessage = (event) => {
       if (!mountedRef.current) return;

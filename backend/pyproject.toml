@@ -27,6 +27,11 @@ dependencies = [
     "pandas>=3.0.3",
     "langchain-qdrant>=1.1.0",
     "fastembed>=0.8.0",
+    "greenlet>=3.5.3",
+    "langfuse>=2.55.0",
+    "langchain-redis>=0.2.5",
+    "langchain-gemini>=0.1.1",
+    "langchain-google-genai>=4.2.7",
 ]
 
 [dependency-groups]

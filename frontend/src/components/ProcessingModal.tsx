@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, memo } from 'react';
 import {
   X,
   FileSearch,
@@ -30,17 +30,16 @@ const STAGES: Stage[] = [
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
+const STATUS_ORDER: DocumentStatus[] = ['uploaded', 'parsing', 'chunking', 'embedding', 'indexing', 'ready', 'failed'];
+
 function stageState(
   stageKey: DocumentStatus,
   currentStatus: DocumentStatus,
 ): 'completed' | 'active' | 'pending' | 'failed' {
-  const order: DocumentStatus[] = ['uploaded', 'parsing', 'chunking', 'embedding', 'indexing', 'ready', 'failed'];
-  const stageIdx = order.indexOf(stageKey);
-  const currentIdx = order.indexOf(currentStatus);
+  const stageIdx = STATUS_ORDER.indexOf(stageKey);
+  const currentIdx = STATUS_ORDER.indexOf(currentStatus);
 
   if (currentStatus === 'failed') {
-    // If the failed stage is before or at this stage, mark as failed
-    // Otherwise it's pending
     return 'failed';
   }
 
@@ -56,7 +55,7 @@ interface ProcessingModalProps {
   onClose: () => void;
 }
 
-function ProcessingModal({ docId, onClose }: ProcessingModalProps) {
+const ProcessingModal = memo(function ProcessingModal({ docId, onClose }: ProcessingModalProps) {
   const documents = useDocumentStore((s) => s.documents);
   const liveProgress = useDocumentStore((s) => s.liveProgress);
 
@@ -205,6 +204,6 @@ function ProcessingModal({ docId, onClose }: ProcessingModalProps) {
       </div>
     </div>
   );
-}
+});
 
-export default React.memo(ProcessingModal);
+export default ProcessingModal;

@@ -20,7 +20,7 @@ services:
       - docgpt
 
   redis:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:latest
     container_name: docgpt-redis
     restart: unless-stopped
     ports:
@@ -67,7 +67,7 @@ services:
   arq_worker:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
     container_name: docgpt-arq-worker
     restart: unless-stopped
     command: >

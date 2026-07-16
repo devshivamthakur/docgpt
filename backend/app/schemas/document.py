@@ -42,6 +42,24 @@ class DeleteResponse(BaseModel):
     message: str
 
 
+class ReprocessResponse(BaseModel):
+    id: int
+    filename: str
+    status: DocumentStatus
+    message: str
+
+
+# ── Storage ────────────────────────────────────────────────────────────
+
+
+class StorageUsageResponse(BaseModel):
+    total_used_bytes: int
+    quota_bytes: int
+    used_percent: float
+
+    model_config = {"from_attributes": True}
+
+
 # ── WebSocket payload ──────────────────────────────────────────────────
 
 

@@ -2,17 +2,28 @@ import os
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.exceptions import NotFoundException, BadRequestException, ForbiddenException
+from app.core.exceptions import (
+    BadRequestException,
+    NotFoundException,
+    ForbiddenException,
+)
+from app.db.repositories import DocumentRepository
 from app.models.document import Document, DocumentStatus
+from app.services.ai.embedding.qdrant import get_qdrant_service
+import asyncio
 
 
 class DocumentService:
+    """Business-logic layer for document management.
+
+    Delegates all data access to ``DocumentRepository``.
+    """
+
     def __init__(self, db: AsyncSession):
-        self.db = db
+        self.repo = DocumentRepository(db)
 
     async def create_document(
         self,
@@ -28,33 +39,24 @@ class DocumentService:
         relative_path = f"{user_id}/{stored_name}"
         absolute_path = os.path.join(settings.upload_dir, relative_path)
 
-        doc = Document(
+        doc = await self.repo.create(
             user_id=user_id,
             filename=relative_path,
             original_filename=original_filename,
             file_size=file_size,
             mime_type=mime_type,
-            status=DocumentStatus.UPLOADING,
-            progress=0,
         )
-        self.db.add(doc)
-        await self.db.commit()
-        await self.db.refresh(doc)
-
         return doc, absolute_path
 
     async def mark_uploaded(self, doc_id: int) -> Document:
         """Mark document as uploaded and queue for processing."""
-        doc = await self.get_document(doc_id)
-        doc.status = DocumentStatus.UPLOADED
-        doc.progress = 0
-        await self.db.commit()
-        await self.db.refresh(doc)
-        return doc
+        return await self.repo.update_progress(
+            doc_id, status=DocumentStatus.UPLOADED, progress=0
+        )
 
     async def get_document(self, doc_id: int) -> Document:
         """Get a document by ID, raise NotFoundException if missing."""
-        doc = await self.db.get(Document, doc_id)
+        doc = await self.repo.get_by_id(doc_id)
         if not doc:
             raise NotFoundException("Document not found")
         return doc
@@ -66,6 +68,14 @@ class DocumentService:
             raise ForbiddenException("Access denied")
         return doc
 
+    async def get_storage_usage(self, user_id: int) -> int:
+        """Get total storage used by a user in bytes."""
+        return await self.repo.get_storage_usage(user_id)
+
+    async def get_storage_quota_bytes(self) -> int:
+        """Return the storage quota per user in bytes."""
+        return settings.storage_quota_bytes
+
     async def list_documents(
         self,
         user_id: int,
@@ -73,19 +83,7 @@ class DocumentService:
         limit: int = 50,
     ) -> tuple[list[Document], int]:
         """List documents for a user with pagination."""
-        query = (
-            select(Document)
-            .where(Document.user_id == user_id)
-            .order_by(Document.created_at.desc())
-            .offset(skip)
-            .limit(limit)
-        )
-        count_query = select(func.count()).where(Document.user_id == user_id)
-
-        rows = (await self.db.execute(query)).scalars().all()
-        total = (await self.db.execute(count_query)).scalar() or 0
-
-        return list(rows), total
+        return await self.repo.list_by_user(user_id, skip=skip, limit=limit)
 
     async def delete_document(self, doc_id: int, user_id: int) -> None:
         """Delete a document (file + DB record)."""
@@ -96,8 +94,15 @@ class DocumentService:
         if os.path.exists(abs_path):
             os.remove(abs_path)
 
-        await self.db.delete(doc)
-        await self.db.commit()
+        asyncio.create_task(
+            asyncio.to_thread(
+                get_qdrant_service().delete_documents_from_collection,
+                user_id=user_id,
+                document_id=doc_id,
+            )
+        )
+
+        await self.repo.delete(doc)
 
     async def update_progress(
         self,
@@ -107,14 +112,35 @@ class DocumentService:
         error_message: str | None = None,
     ) -> Document:
         """Update document status and progress (used by ARQ worker)."""
-        doc = await self.db.get(Document, doc_id)
-        if not doc:
-            raise NotFoundException("Document not found")
-        doc.status = status
-        doc.progress = progress
-        doc.updated_at = datetime.utcnow()
-        if error_message is not None:
-            doc.error_message = error_message
-        await self.db.commit()
-        await self.db.refresh(doc)
-        return doc
+        return await self.repo.update_progress(
+            doc_id, status=status, progress=progress, error_message=error_message
+        )
+
+    async def reset_for_reprocess(self, doc_id: int, user_id: int) -> Document:
+        """Reset a failed document back to UPLOADED state for reprocessing.
+
+        Deletes existing Qdrant vectors first, then clears the error state.
+        """
+        doc = await self.get_user_document(doc_id, user_id)
+
+        if doc.status != DocumentStatus.FAILED:
+            raise BadRequestException(
+                f"Cannot reprocess document with status '{doc.status.value}'. "
+                "Only failed documents can be reprocessed."
+            )
+
+        # Delete existing vectors from Qdrant before re-indexing
+        asyncio.create_task(
+            asyncio.to_thread(
+                get_qdrant_service().delete_documents_from_collection,
+                user_id=user_id,
+                document_id=doc_id,
+            )
+        )
+
+        return await self.repo.update_progress(
+            doc_id,
+            status=DocumentStatus.UPLOADED,
+            progress=0,
+            error_message=None,
+        )

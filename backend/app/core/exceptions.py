@@ -58,6 +58,13 @@ class InternalServerException(AppException):
         super().__init__(status_code=500, message=message)
 
 
+class TooManyRequestsException(AppException):
+    """429 Too Many Requests."""
+
+    def __init__(self, message: str = "Too many requests. Please try again later."):
+        super().__init__(status_code=429, message=message)
+
+
 # ---------------------------------------------------------------------------
 # Exception handlers — every response body uses ONLY the "message" key
 # ---------------------------------------------------------------------------
@@ -66,7 +73,9 @@ class InternalServerException(AppException):
 async def app_exception_handler(request: Request, exc: AppException):
     """Handle custom AppException subclasses."""
     logger.error(
-        "%s: %s", exc.__class__.__name__, exc.message,
+        "%s: %s",
+        exc.__class__.__name__,
+        exc.message,
         extra={"path": request.url.path},
     )
     return JSONResponse(
@@ -78,7 +87,9 @@ async def app_exception_handler(request: Request, exc: AppException):
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Handle raw Starlette / FastAPI HTTPException (fallback)."""
     logger.warning(
-        "HTTPException %s: %s", exc.status_code, exc.detail,
+        "HTTPException %s: %s",
+        exc.status_code,
+        exc.detail,
         extra={"path": request.url.path},
     )
     return JSONResponse(
@@ -92,7 +103,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     errors = exc.errors()
     first = errors[0] if errors else {}
     loc_parts = [
-        str(p) for p in first.get("loc", [])
+        str(p)
+        for p in first.get("loc", [])
         if p not in ("body", "query", "path", "string")
     ]
     field = " -> ".join(loc_parts) if loc_parts else ""
@@ -105,7 +117,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def general_exception_handler(request: Request, exc: Exception):
     """Catch-all for unhandled exceptions — never leak internals."""
     logger.exception(
-        "Unhandled exception: %s", str(exc),
+        "Unhandled exception: %s",
+        str(exc),
         extra={"path": request.url.path},
     )
     return JSONResponse(

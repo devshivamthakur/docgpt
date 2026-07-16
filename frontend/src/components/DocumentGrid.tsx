@@ -1,13 +1,13 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   FileText,
   Trash2,
-  AlertCircle,
   Loader2,
   CheckCircle2,
   Clock,
   FileSearch,
   XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import {
   useDocumentStore,
@@ -93,10 +93,12 @@ function formatDate(iso: string): string {
 const DocumentCard = React.memo(function DocumentCard({
   doc,
   onDelete,
+  onReprocess,
   onClick,
 }: {
   doc: Document;
   onDelete: (id: number) => void;
+  onReprocess: (id: number) => void;
   onClick: (id: number) => void;
 }) {
   const { badge, isProcessing } = useMemo(
@@ -117,6 +119,14 @@ const DocumentCard = React.memo(function DocumentCard({
       onDelete(doc.id);
     },
     [doc.id, onDelete],
+  );
+
+  const handleReprocessClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onReprocess(doc.id);
+    },
+    [doc.id, onReprocess],
   );
 
   return (
@@ -178,6 +188,19 @@ const DocumentCard = React.memo(function DocumentCard({
           <ProgressBar progress={100} status={doc.status} />
         </div>
       )}
+
+      {/* Retry CTA for failed documents */}
+      {doc.status === 'failed' && (
+        <div className="mt-4 flex gap-2">
+          <button
+            onClick={handleReprocessClick}
+            className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition-all hover:bg-red-500/20 hover:border-red-500/50 active:scale-95"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Retry processing
+          </button>
+        </div>
+      )}
     </div>
   );
 });
@@ -187,26 +210,33 @@ const DocumentCard = React.memo(function DocumentCard({
 interface DocumentGridProps {
   selectedDocId: number | null;
   onSelectDoc: (id: number | null) => void;
+  compact?: boolean;
 }
 
-export default function DocumentGrid({ selectedDocId, onSelectDoc }: DocumentGridProps) {
-  const documents = useDocumentStore((s) => s.documents);
+const DocumentGrid = React.memo(function DocumentGrid({
+  selectedDocId,
+  onSelectDoc,
+  compact = false,
+}: DocumentGridProps) {
+  const documents = useDocumentStore((s) => s.documents) ?? [];
   const isLoading = useDocumentStore((s) => s.isLoading);
   const deleteDocument = useDocumentStore((s) => s.deleteDocument);
+  const reprocessDocument = useDocumentStore((s) => s.reprocessDocument);
 
-  const [deleting, setDeleting] = useState<Set<number>>(new Set());
+  const displayedDocs = compact ? documents.slice(0, 6) : documents;
 
   const handleDelete = useCallback(
     async (id: number) => {
-      setDeleting((prev) => new Set(prev).add(id));
       await deleteDocument(id);
-      setDeleting((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
     },
     [deleteDocument],
+  );
+
+  const handleReprocess = useCallback(
+    async (id: number) => {
+      await reprocessDocument(id);
+    },
+    [reprocessDocument],
   );
 
   const handleCloseModal = useCallback(() => {
@@ -237,11 +267,12 @@ export default function DocumentGrid({ selectedDocId, onSelectDoc }: DocumentGri
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {documents.map((doc) => (
+        {displayedDocs.map((doc) => (
           <DocumentCard
             key={doc.id}
             doc={doc}
             onDelete={handleDelete}
+            onReprocess={handleReprocess}
             onClick={onSelectDoc}
           />
         ))}
@@ -254,4 +285,6 @@ export default function DocumentGrid({ selectedDocId, onSelectDoc }: DocumentGri
       />
     </>
   );
-}
+});
+
+export default DocumentGrid;

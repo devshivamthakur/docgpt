@@ -16,6 +16,9 @@ RUN uv sync --frozen
 # ── Copy application source (cached separately from deps) ───────────────
 COPY . .
 
+# Make entrypoint executable
+RUN chmod +x /app/entrypoint.sh
+
 EXPOSE 8000
 
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-exclude", ".venv"]
+CMD ["/app/entrypoint.sh"]

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import api from './api';
+import api, { getAccessToken, setTokens, clearTokens } from './api';
 
 export interface AuthState {
   /* ── State ────────────────────────────────────────────────────── */
@@ -18,9 +18,9 @@ export interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
   /* ── Initial state ────────────────────────────────────────────── */
-  token: localStorage.getItem('docgpt-token'),
+  token: getAccessToken(),
   user: null,
-  isAuthenticated: !!localStorage.getItem('docgpt-token'),
+  isAuthenticated: !!getAccessToken(),
   isLoading: false,
   error: null,
 
@@ -29,10 +29,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      const token: string = data.access_token;
-      localStorage.setItem('docgpt-token', token);
-      localStorage.setItem('refresh-token', data.refresh_token);
-      set({ token, isAuthenticated: true, isLoading: false });
+      setTokens(data.access_token, data.refresh_token);
+      set({ token: data.access_token, isAuthenticated: true, isLoading: false });
     } catch (err: any) {
       const message = err.normalizedMessage || 'Login failed';
       set({ error: message, isLoading: false });
@@ -47,10 +45,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { data } = await api.post('/auth/register', { email, password, full_name });
       // After registration, log the user in automatically
       await api.post('/auth/login', { email, password }).then((res) => {
-        const token: string = res.data.access_token;
-        localStorage.setItem('docgpt-token', token);
-        localStorage.setItem('refresh-token', res.data.refresh_token);
-        set({ token, isAuthenticated: true, isLoading: false, user: data });
+        setTokens(res.data.access_token, res.data.refresh_token);
+        set({ token: res.data.access_token, isAuthenticated: true, isLoading: false, user: data });
       });
     } catch (err: any) {
       const message = err.normalizedMessage || 'Registration failed';
@@ -61,11 +57,19 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   /* ── Logout ───────────────────────────────────────────────────── */
   logout: () => {
-    localStorage.removeItem('docgpt-token');
-    localStorage.removeItem('refresh-token');
+    clearTokens();
     set({ token: null, user: null, isAuthenticated: false, error: null });
   },
 
   /* ── Clear error ──────────────────────────────────────────────── */
   clearError: () => set({ error: null }),
 }));
+
+// ── Listen for auth expiry events from the API interceptor ──────────
+// This avoids a circular dependency (api.ts → authStore.ts → api.ts)
+// by using a custom DOM event instead of a direct import.
+if (typeof window !== 'undefined') {
+  window.addEventListener('auth:expired', () => {
+    useAuthStore.getState().logout();
+  });
+}

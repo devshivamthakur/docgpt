@@ -190,7 +190,9 @@ class CacheService:
             cursor = 0
             deleted = 0
             while True:
-                cursor, keys = await client.scan(cursor=cursor, match=pattern, count=100)
+                cursor, keys = await client.scan(
+                    cursor=cursor, match=pattern, count=100
+                )
                 if keys:
                     deleted += await client.delete(*keys)
                 if cursor == 0:
@@ -208,15 +210,20 @@ cache_service = CacheService()
 # ── Cache key builders ────────────────────────────────────────────────
 
 
-def _make_cache_key(func: Callable, args: tuple, kwargs: dict, prefix: str | None = None) -> str:
+def _make_cache_key(
+    func: Callable, args: tuple, kwargs: dict, prefix: str | None = None
+) -> str:
     """Generate a deterministic cache key from function metadata + arguments.
 
     The key includes the module and function name so there are no collisions
     across different endpoints.
 
-    ``current_user`` is handled specially: its ``id`` is included in the key
-    so that each user gets their own cache entry. Other DI-only parameters
-    such as ``db``, ``request``, ``response``, and ``session`` are excluded.
+    ``current_user`` is handled specially: its ``id`` is included both
+    in the hash and as a separate path segment in the key so that each user
+    gets their own cache entry and per-user cache invalidation is possible.
+    Key format: ``<prefix>:<user_id>:<hash>`` (or ``<prefix>:<hash>`` if
+    no user context). Other DI-only parameters such as ``db``, ``request``,
+    ``response``, and ``session`` are excluded.
     """
     module = inspect.getmodule(func)
     module_name = module.__name__ if module else "unknown"
@@ -230,12 +237,15 @@ def _make_cache_key(func: Callable, args: tuple, kwargs: dict, prefix: str | Non
     # Remove common dependency-injection parameters that don't affect the result
     skip_params = {"db", "request", "response", "session"}
     args_dict: dict[str, Any] = {}
+    user_id: int | None = None
     for k, v in bound.arguments.items():
         if k in skip_params:
             continue
         if k == "current_user":
             # Include user ID so each user has their own cache entry
-            args_dict["user_id"] = getattr(v, "id", None)
+            uid = getattr(v, "id", None)
+            args_dict["user_id"] = uid
+            user_id = uid
         else:
             args_dict[k] = v
 
@@ -244,6 +254,8 @@ def _make_cache_key(func: Callable, args: tuple, kwargs: dict, prefix: str | Non
     arg_hash = hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     prefix_str = prefix or func.__name__
+    if user_id is not None:
+        return f"{prefix_str}:{user_id}:{arg_hash}"
     return f"{prefix_str}:{arg_hash}"
 
 
@@ -300,7 +312,9 @@ def cached(
 
             # ── Check condition ────────────────────────────────────
             if condition is not None and not condition(*args, **kwargs):
-                logger.debug("Cache condition not met for %s — skipping", func.__qualname__)
+                logger.debug(
+                    "Cache condition not met for %s — skipping", func.__qualname__
+                )
                 return await func(*args, **kwargs)
 
             # ── Build key ──────────────────────────────────────────
@@ -328,7 +342,9 @@ def cached(
                 if await lock.acquire(blocking=False):
                     try:
                         # Got lock, do the refresh
-                        asyncio.create_task(_revalidate_cache(func, args, kwargs, cache_key, ttl))
+                        asyncio.create_task(
+                            _revalidate_cache(func, args, kwargs, cache_key, ttl)
+                        )
                     finally:
                         # asyncio.create_task(lock.release()) is not safe,
                         # but we can let it expire naturally.
@@ -379,16 +395,37 @@ async def _set_cache(cache_key: str, result: Any, ttl: int) -> None:
 
 
 async def invalidate_document_caches(user_id: int | None = None) -> None:
-    """Invalidate all document-related cache entries.
+    """Invalidate document-related cache entries for a specific user (or all users).
 
     Should be called after any document write operation (upload / delete).
     """
-    await cache_service.clear_pattern("list_documents:*")
-    await cache_service.clear_pattern("get_document:*")
+    if user_id is not None:
+        await cache_service.clear_pattern(f"list_documents:{user_id}:*")
+        await cache_service.clear_pattern(f"get_document:{user_id}:*")
+    else:
+        await cache_service.clear_pattern("list_documents:*")
+        await cache_service.clear_pattern("get_document:*")
     logger.info("Invalidated document caches (user=%s)", user_id)
 
 
 async def invalidate_user_caches(user_id: int | None = None) -> None:
-    """Invalidate user-related cache entries."""
-    await cache_service.clear_pattern("get_me:*")
+    """Invalidate user-related cache entries for a specific user (or all users)."""
+    if user_id is not None:
+        await cache_service.clear_pattern(f"get_me:{user_id}:*")
+    else:
+        await cache_service.clear_pattern("get_me:*")
     logger.info("Invalidated user caches (user=%s)", user_id)
+
+
+async def invalidate_conversation_caches(user_id: int | None = None) -> None:
+    """Invalidate conversation-related cache entries for a specific user (or all users).
+
+    Should be called after any conversation write operation (create / delete / send message).
+    """
+    if user_id is not None:
+        await cache_service.clear_pattern(f"list_conversations:{user_id}:*")
+        await cache_service.clear_pattern(f"get_conversation:{user_id}:*")
+    else:
+        await cache_service.clear_pattern("list_conversations:*")
+        await cache_service.clear_pattern("get_conversation:*")
+    logger.info("Invalidated conversation caches (user=%s)", user_id)

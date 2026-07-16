@@ -1,13 +1,24 @@
 import os
 import logging
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Query,
+    Request,
+    UploadFile,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import BadRequestException
 from app.core.middleware import get_current_user
+from app.core.rate_limiter import rate_limit
 from app.core.redis_cache import cached, invalidate_document_caches
+from app.core.sanitization import Sanitizer
 from app.core.websocket import listen_redis_progress, manager
 from app.db.session import get_db
 from app.models.document import DocumentStatus
@@ -16,6 +27,8 @@ from app.schemas.document import (
     DeleteResponse,
     DocumentListResponse,
     DocumentResponse,
+    ReprocessResponse,
+    StorageUsageResponse,
     UploadResponse,
 )
 from app.services.document_service import DocumentService
@@ -35,7 +48,9 @@ ALLOWED_MIME_TYPES = {
 
 
 @router.post("", response_model=UploadResponse, status_code=201)
+@rate_limit(max_requests=30, window_seconds=60, scope="documents")
 async def upload_document(
+    request: Request,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -64,11 +79,26 @@ async def upload_document(
             f"File exceeds the maximum size of {settings.max_upload_size_mb} MB"
         )
 
-    # ── Create DB record ────────────────────────────────────────────
+    # Sanitize filename to prevent path traversal
+    safe_filename = Sanitizer.sanitize_filename(file.filename)
+
+    # ── Check storage quota ─────────────────────────────────────────
     service = DocumentService(db)
+    current_usage = await service.get_storage_usage(current_user.id)
+    remaining = settings.storage_quota_bytes - current_usage
+    if len(contents) > remaining:
+        remaining_mb = remaining / (1024 * 1024)
+        file_mb = len(contents) / (1024 * 1024)
+        raise BadRequestException(
+            f"Insufficient storage space. You have {remaining_mb:.1f} MB remaining, "
+            f"but this file is {file_mb:.1f} MB. "
+            f"Your storage limit is {settings.storage_quota_bytes / (1024 * 1024 * 1024):.0f} GB."
+        )
+
+    # ── Create DB record ────────────────────────────────────────────
     doc, storage_path = await service.create_document(
         user_id=current_user.id,
-        original_filename=file.filename,
+        original_filename=safe_filename,
         file_size=len(contents),
         mime_type=file.content_type or "application/octet-stream",
     )
@@ -82,14 +112,19 @@ async def upload_document(
     await service.mark_uploaded(doc.id)
 
     # Dispatch ARQ job (fire-and-forget)
-    await enqueue_process_document(doc.id, storage_path, original_filename=file.filename)
+    await enqueue_process_document(
+        doc.id, storage_path, original_filename=file.filename
+    )
 
     # Invalidate list cache so the new document appears immediately
     await invalidate_document_caches(user_id=current_user.id)
 
     logger.info(
         "Document uploaded: id=%s, filename=%s, size=%d, user=%s",
-        doc.id, file.filename, len(contents), current_user.id,
+        doc.id,
+        file.filename,
+        len(contents),
+        current_user.id,
     )
 
     return UploadResponse(
@@ -141,10 +176,69 @@ async def delete_document(
     current_user: User = Depends(get_current_user),
 ):
     """Delete a document and its file."""
+    print(f"Deleting document {doc_id} for user {current_user}")
     service = DocumentService(db)
     await service.delete_document(doc_id, current_user.id)
     await invalidate_document_caches(user_id=current_user.id)
     return DeleteResponse(message="Document deleted successfully")
+
+
+@router.post("/{doc_id}/reprocess", response_model=ReprocessResponse)
+async def reprocess_document(
+    doc_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Reprocess a document that previously failed.
+
+    Resets the document status to 'uploaded', clears the error,
+    deletes any existing Qdrant vectors for this document, and
+    enqueues a new ARQ processing job.
+    """
+    service = DocumentService(db)
+
+    # Reset document state (validates ownership & failed status)
+    doc = await service.reset_for_reprocess(doc_id, current_user.id)
+
+    # Re-enqueue the ARQ processing job
+    storage_path = os.path.join(settings.upload_dir, doc.filename)
+    await enqueue_process_document(
+        doc.id, storage_path, original_filename=doc.original_filename
+    )
+
+    # Invalidate caches so the updated status appears immediately
+    await invalidate_document_caches(user_id=current_user.id)
+
+    logger.info(
+        "Document reprocess queued: id=%s, filename=%s, user=%s",
+        doc.id,
+        doc.original_filename,
+        current_user.id,
+    )
+
+    return ReprocessResponse(
+        id=doc.id,
+        filename=doc.original_filename,
+        status=doc.status,
+        message="Document reprocessing has been queued.",
+    )
+
+
+@cached(ttl=1100, soft_ttl=60)
+@router.get("/storage/usage", response_model=StorageUsageResponse)
+async def get_storage_usage(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get storage usage for the authenticated user (quota: 1 GB)."""
+    service = DocumentService(db)
+    total_used = await service.get_storage_usage(current_user.id)
+    quota = await service.get_storage_quota_bytes()
+    return StorageUsageResponse(
+        total_used_bytes=total_used,
+        quota_bytes=quota,
+        used_percent=round((total_used / quota) * 100, 2) if quota > 0 else 0,
+    )
 
 
 @router.websocket("/{doc_id}/progress-ws")
@@ -171,7 +265,7 @@ async def document_progress_ws(
     try:
         payload = decode_token(token)
         user_id = int(payload.get("sub", 0))
-    except (JWTError, ValueError, TypeError):
+    except JWTError, ValueError, TypeError:
         await websocket.close(code=4001, reason="Invalid token")
         return
 
@@ -191,11 +285,13 @@ async def document_progress_ws(
         await manager.connect(doc_id, websocket)
 
         # Send current state immediately
-        await websocket.send_json({
-            "status": doc.status,
-            "progress": doc.progress,
-            "message": "",
-        })
+        await websocket.send_json(
+            {
+                "status": doc.status,
+                "progress": doc.progress,
+                "message": "",
+            }
+        )
 
         # If already in a terminal state, no need to listen
         if doc.status in (DocumentStatus.READY, DocumentStatus.FAILED):

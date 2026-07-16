@@ -45,7 +45,9 @@ async def shutdown_arq_pool() -> None:
 
 async def get_arq_pool() -> ArqRedis:
     """Return the existing ARQ Redis pool (must be initialised first)."""
-    assert _arq_pool is not None, "ARQ pool not initialised — call init_arq_pool() first"
+    assert _arq_pool is not None, (
+        "ARQ pool not initialised — call init_arq_pool() first"
+    )
     return _arq_pool
 
 
@@ -86,6 +88,13 @@ async def worker_startup(ctx: dict) -> None:
     ctx["db_engine"] = engine
     logger.info("ARQ worker sync DB engine created")
 
+    # Initialise Langfuse client for document processing tracing
+    if settings.LANGFUSE_SECRET_KEY and settings.LANGFUSE_PUBLIC_KEY:
+        from app.core.langfuse import get_langfuse
+
+        get_langfuse()
+        logger.info("Langfuse client initialised in ARQ worker")
+
 
 async def worker_shutdown(ctx: dict) -> None:
     """Called when the ARQ worker shuts down."""
@@ -110,7 +119,9 @@ class WorkerSettings:
     redis_settings = redis_settings
     on_startup = worker_startup
     on_shutdown = worker_shutdown
-    keep_result = 3600          # keep job results for 1 hour
-    max_tries = 3               # default max retries per job
-    job_timeout = 600           # 10 minutes max per job
-    poll_delay = 0.5            # poll Redis every 500 ms
+    keep_result = 3600  # keep job results for 1 hour
+    max_tries = 3  # default max retries per job
+    job_timeout = 600  # 10 minutes max per job
+    poll_delay = 0.5  # poll Redis every 500 ms
+    concurrency = 5  # process up to 5 documents in parallel
+    concurrency = 3

@@ -32,6 +32,12 @@ export interface ProgressPayload {
   message: string;
 }
 
+export interface StorageUsage {
+  total_used_bytes: number;
+  quota_bytes: number;
+  used_percent: number;
+}
+
 export interface DocumentState {
   /* ── State ────────────────────────────────────────────────────── */
   documents: Document[];
@@ -41,11 +47,16 @@ export interface DocumentState {
   error: string | null;
   /** Map of document-id → live progress (driven by WebSocket) */
   liveProgress: Record<number, ProgressPayload>;
+  /** Storage usage info */
+  storageUsage: StorageUsage | null;
 
   /* ── Actions ──────────────────────────────────────────────────── */
   fetchDocuments: () => Promise<void>;
+  fetchDocumentsPage: (skip?: number, limit?: number) => Promise<void>;
+  fetchStorageUsage: () => Promise<void>;
   uploadDocument: (file: File) => Promise<Document>;
   deleteDocument: (id: number) => Promise<void>;
+  reprocessDocument: (id: number) => Promise<void>;
   updateProgress: (docId: number, payload: ProgressPayload) => void;
   clearError: () => void;
 }
@@ -83,6 +94,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   isUploading: false,
   error: null,
   liveProgress: {},
+  storageUsage: null,
 
   fetchDocuments: async () => {
     set({ isLoading: true, error: null });
@@ -91,6 +103,25 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       set({ documents: data.documents, total: data.total, isLoading: false });
     } catch (err: any) {
       set({ error: err.normalizedMessage || 'Failed to load documents', isLoading: false });
+    }
+  },
+
+  fetchDocumentsPage: async (skip = 0, limit = 20) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await api.get('/documents', { params: { skip, limit } });
+      set({ documents: data.documents, total: data.total, isLoading: false });
+    } catch (err: any) {
+      set({ error: err.normalizedMessage || 'Failed to load documents', isLoading: false });
+    }
+  },
+
+  fetchStorageUsage: async () => {
+    try {
+      const { data } = await api.get('/documents/storage/usage');
+      set({ storageUsage: data });
+    } catch {
+      // Non-critical — silently ignore
     }
   },
 
@@ -136,8 +167,31 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
         documents: s.documents.filter((d) => d.id !== id),
         total: s.total - 1,
       }));
+      // Refresh storage after deletion
+      get().fetchStorageUsage();
     } catch (err: any) {
       set({ error: err.normalizedMessage || 'Failed to delete document' });
+    }
+  },
+
+  reprocessDocument: async (id: number) => {
+    set({ error: null });
+    try {
+      // Optimistically mark as 'uploaded' so the UI shows progress
+      set((s) => ({
+        documents: s.documents.map((d) =>
+          d.id === id
+            ? { ...d, status: 'uploaded' as DocumentStatus, progress: 0, error_message: null }
+            : d,
+        ),
+      }));
+
+      await api.post(`/documents/${id}/reprocess`);
+      // The WebSocket will drive further progress updates
+    } catch (err: any) {
+      // Revert on failure — re-fetch to get accurate state
+      set({ error: err.normalizedMessage || 'Failed to reprocess document' });
+      get().fetchDocuments();
     }
   },
 

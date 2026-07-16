@@ -23,9 +23,21 @@ LOGGING_CONFIG: dict[str, Any] = {
     },
     "root": {"handlers": ["console"], "level": settings.log_level.upper()},
     "loggers": {
-        "uvicorn": {"handlers": ["console"], "level": settings.log_level.upper(), "propagate": False},
-        "uvicorn.error": {"handlers": ["console"], "level": settings.log_level.upper(), "propagate": False},
-        "uvicorn.access": {"handlers": ["console"], "level": settings.log_level.upper(), "propagate": False},
+        "uvicorn": {
+            "handlers": ["console"],
+            "level": settings.log_level.upper(),
+            "propagate": False,
+        },
+        "uvicorn.error": {
+            "handlers": ["console"],
+            "level": settings.log_level.upper(),
+            "propagate": False,
+        },
+        "uvicorn.access": {
+            "handlers": ["console"],
+            "level": settings.log_level.upper(),
+            "propagate": False,
+        },
     },
 }
 

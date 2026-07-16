@@ -1,4 +1,3 @@
-import asyncio
 import json
 import logging
 
@@ -22,7 +21,11 @@ class ConnectionManager:
         if websocket.client_state == WebSocketState.CONNECTING:
             await websocket.accept()
         self.active_connections.setdefault(document_id, set()).add(websocket)
-        logger.info("WS connected for document %s (%d active)", document_id, len(self.active_connections[document_id]))
+        logger.info(
+            "WS connected for document %s (%d active)",
+            document_id,
+            len(self.active_connections[document_id]),
+        )
 
     def disconnect(self, document_id: int, websocket: WebSocket) -> None:
         if document_id in self.active_connections:
@@ -76,7 +79,7 @@ async def listen_redis_progress(document_id: int, websocket: WebSocket) -> None:
                 # Terminal states — close the subscription
                 if data.get("status") in ("ready", "failed"):
                     break
-            except (WebSocketDisconnect, RuntimeError):
+            except WebSocketDisconnect, RuntimeError:
                 # Client disconnected or already closed — stop listening
                 break
             except Exception:

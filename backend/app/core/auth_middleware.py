@@ -13,16 +13,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
     """Middleware that validates JWT tokens on protected routes."""
 
     # Public routes that don't require authentication
-    PUBLIC_PATHS = frozenset({
-        "/health",
-        "/api/auth/login",
-        "/api/auth/register",
-        "/docs",
-        "/openapi.json",
-        "/redoc",
-        "/favicon.ico",
-        "/",
-    })
+    PUBLIC_PATHS = frozenset(
+        {
+            "/health",
+            "/api/auth/login",
+            "/api/auth/register",
+            "/docs",
+            "/openapi.json",
+            "/redoc",
+            "/favicon.ico",
+            "/",
+        }
+    )
 
     async def dispatch(self, request: Request, call_next):
         # Skip auth for WebSocket upgrade requests — they authenticate via query param
@@ -31,9 +33,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         if request.url.path in self.PUBLIC_PATHS:
             return await call_next(request)
-        
-        if request.url.path in "/refresh":
-            #extract refresh token from request body
+
+        if request.url.path in "/api/auth/refresh":
+            # extract refresh token from request body
             try:
                 body = await request.json()
                 refresh_token = body.get("refresh_token")
@@ -56,25 +58,30 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     status_code=401,
                     content={"message": "Invalid or expired refresh token"},
                 )
+        else:
+            # ── Extract & validate Bearer token ──────────────────────────────
+            authorization = request.headers.get("authorization", "")
+            token: str | None = None
+            if authorization.startswith("Bearer "):
+                token = authorization.split(" ", 1)[1]
+            else:
+                # Fallback for EventSource / SSE — cannot set custom headers
+                token = request.query_params.get("token")
 
-        # ── Extract & validate Bearer token ──────────────────────────────
-        authorization = request.headers.get("authorization", "")
-        if not authorization.startswith("Bearer "):
-            logger.warning("Missing authorization header: %s", request.url.path)
-            return JSONResponse(
-                status_code=401,
-                content={"message": "Missing authentication token"},
-            )
-
-        token = authorization.split(" ", 1)[1]
-        try:
-            payload = decode_token(token)
-        except Exception:
-            logger.warning("Invalid token: %s", request.url.path)
-            return JSONResponse(
-                status_code=401,
-                content={"message": "Invalid or expired token"},
-            )
+            if not token:
+                logger.warning("Missing authentication token: %s", request.url.path)
+                return JSONResponse(
+                    status_code=401,
+                    content={"message": "Missing authentication token"},
+                )
+            try:
+                payload = decode_token(token)
+            except Exception:
+                logger.warning("Invalid token: %s", request.url.path)
+                return JSONResponse(
+                    status_code=401,
+                    content={"message": "Invalid or expired token"},
+                )
 
         # ── Resolve user from token ──────────────────────────────────────
         try:

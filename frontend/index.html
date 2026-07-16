@@ -4,7 +4,34 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+
+    <!-- ── Title ──────────────────────────────────────────────── -->
+    <title>DocGPT — Chat with your documents</title>
+    <meta name="description" content="AI-powered document chat with RAG. Upload files, ask questions, get answers with source citations." />
+
+    <!-- ── Security headers (enforced by meta tags) ────────────── -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval';
+      style-src 'self' 'unsafe-inline';
+      img-src 'self' data: blob:;
+      font-src 'self' data:;
+      connect-src 'self' http://localhost:8000 ws://localhost:8000 https://api.openai.com;
+      frame-src 'none';
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+    " />
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
+    <meta name="permissions-policy" content="camera=(), microphone=(), geolocation=(), interest-cohort=()" />
+
+    <!-- ── Performance: DNS prefetch & preconnect ──────────────── -->
+    <link rel="dns-prefetch" href="//localhost:8000" />
+    <link rel="preconnect" href="http://localhost:8000" crossorigin="anonymous" />
+
+    <!-- ── Theme color (matches bg-slate-950) ──────────────────── -->
+    <meta name="theme-color" content="#020617" />
   </head>
   <body>
     <div id="root"></div>
