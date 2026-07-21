@@ -22,7 +22,6 @@ from langchain_redis import RedisSemanticCache as RedisCache
 
 from app.core.config import settings
 from app.services.ai.llm.embedding import EmbeddingLLM
-from app.services.rag.config import rag_config
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +85,8 @@ class RedisSemanticCache:
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._cache = None  # type: ignore[attr-defined]
+            from app.services.rag.config import rag_config
+
             cls._instance._config = rag_config  # type: ignore[attr-defined]
         return cls._instance
 

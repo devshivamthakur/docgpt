@@ -6,8 +6,9 @@ more effective search queries before they reach the vector store.
 
 import logging
 import re
+from typing import Any
 
-
+from app.core.constants import PROVIDER_OPENAI
 from app.core.sanitization import Sanitizer
 from app.services.rag.config import RagConfig
 from app.services.rag.query_processor.schemas import ProcessedQuery
@@ -130,9 +131,64 @@ class QueryProcessor:
     ) -> str:
         """Rewrite a verbose or context-dependent query into a standalone search query.
 
-        Uses rule-based compression for speed — no LLM call needed for most queries.
-        Falls back to the normalised form on any error.
+        Uses LLM-based query rewriting if history is present, falling back to rule-based compression.
         """
+        if history:
+            return await self._llm_rewrite(raw_query, history)
+        return self._compression_rewrite(raw_query)
+
+    @property
+    def llm(self) -> Any:
+        if not hasattr(self, "_llm") or self._llm is None:
+            from app.services.ai.llm.models import LLM
+            from app.core.config import settings
+
+            model = (
+                self.config.query_rewrite_model
+                or settings.OPENAI_MODEL_NAME
+                or "gpt-4o-mini"
+            )
+            self._llm = LLM(
+                model_name=model if self.config.query_rewrite_model else None,
+                temperature=0.0,
+                provider=PROVIDER_OPENAI,
+            ).llm
+        return self._llm
+
+    async def _llm_rewrite(
+        self,
+        raw_query: str,
+        history: list[dict],
+    ) -> str:
+        """Use LLM to rewrite query based on conversation history."""
+        # Format the history
+        formatted_history = []
+        for msg in history[-5:]:  # Look at last 5 messages for context
+            role = "User" if msg.get("role") == "user" else "Assistant"
+            content = msg.get("content", "")
+            formatted_history.append(f"{role}: {content}")
+        history_str = "\n".join(formatted_history)
+
+        from app.Prompt.QueryProcessorPrompt import build_query_rewrite_prompt
+
+        prompt = build_query_rewrite_prompt(history_str, raw_query)
+
+        try:
+            response = await self.llm.ainvoke(prompt)
+            from app.services.rag.utils import extract_chunk_content
+
+            rewritten = extract_chunk_content(response.content).strip()
+            rewritten = rewritten.strip("\"`'")
+            if rewritten:
+                logger.info(
+                    "LLM query rewrite: raw_query='%s' -> rewritten='%s'",
+                    raw_query,
+                    rewritten,
+                )
+                return rewritten
+        except Exception as e:
+            logger.warning("Failed to run LLM query rewrite: %s", e)
+
         return self._compression_rewrite(raw_query)
 
     def _compression_rewrite(self, query: str) -> str:
@@ -144,141 +200,54 @@ class QueryProcessor:
 
         # Remove trailing question marks and polite endings
         q = q.rstrip("?.").strip()
-
-        # If query is already short (< 6 words), keep as-is
-        if len(q.split()) <= 6:
-            return q
-
-        # For longer queries, try to extract the core question
-        # Pattern: "What/How/Why ... [topic]?" → keep the core
-        match = re.match(
-            r"(what|how|why|when|where|who|which|explain|describe|define|compare)\s+"
-            r"((?:\w+\s+){0,10}\w+)",
-            q,
-            re.IGNORECASE,
-        )
-        if match:
-            return f"{match.group(1)} {match.group(2)}"
-
         return q
 
     async def _expand(self, query: str) -> list[str]:
-        """Generate related search terms for broader recall.
+        """HyDE (Hypothetical Document Embedding) expansion.
 
-        This is a simplified HyDE-light approach using keyword expansion.
+        Generates a short hypothetical document passage that answers the
+        query, then uses that passage as an additional search query.
+        This improves recall because the hypothetical document is closer
+        in embedding space to real relevant documents than the query itself.
+
+        Falls back gracefully if the LLM call fails.
         """
-        # Extract key nouns/phrases for keyword-level expansion
-        words = query.lower().split()
-        # Filter stop words
-        stop_words = {
-            "a",
-            "an",
-            "the",
-            "is",
-            "are",
-            "was",
-            "were",
-            "be",
-            "been",
-            "being",
-            "have",
-            "has",
-            "had",
-            "do",
-            "does",
-            "did",
-            "will",
-            "would",
-            "could",
-            "should",
-            "may",
-            "might",
-            "shall",
-            "can",
-            "to",
-            "of",
-            "in",
-            "for",
-            "on",
-            "with",
-            "at",
-            "by",
-            "from",
-            "as",
-            "into",
-            "through",
-            "during",
-            "before",
-            "after",
-            "above",
-            "below",
-            "between",
-            "out",
-            "off",
-            "over",
-            "under",
-            "again",
-            "further",
-            "then",
-            "once",
-            "here",
-            "there",
-            "when",
-            "where",
-            "why",
-            "how",
-            "all",
-            "each",
-            "every",
-            "both",
-            "few",
-            "more",
-            "most",
-            "other",
-            "some",
-            "such",
-            "no",
-            "nor",
-            "not",
-            "only",
-            "own",
-            "same",
-            "so",
-            "than",
-            "too",
-            "very",
-            "just",
-            "because",
-            "until",
-            "while",
-            "about",
-            "against",
-            "among",
-            "throughout",
-            "upon",
-            "down",
-            "in",
-            "out",
-            "on",
-            "off",
-            "over",
-            "under",
-            "up",
-            "down",
-            "and",
-            "but",
-            "if",
-            "or",
-            "because",
-            "as",
-            "while",
-            "of",
-            "at",
-            "by",
-            "for",
-            "with",
-            "about",
-            "against",
-        }
-        keywords = [w for w in words if w not in stop_words and len(w) > 2]
-        return keywords
+        try:
+            hyde_passage = await self._generate_hypothetical_document(query)
+            if hyde_passage and len(hyde_passage) > 20:
+                logger.debug(
+                    "HyDE expansion: query='%.40s' -> passage='%.60s...'",
+                    query,
+                    hyde_passage[:60],
+                )
+                return [hyde_passage]
+        except Exception as e:
+            logger.debug("HyDE expansion failed for '%.40s': %s", query[:40], e)
+
+        return []
+
+    async def _generate_hypothetical_document(self, query: str) -> str | None:
+        """Call an LLM to generate a hypothetical document passage.
+
+        The prompt asks the LLM to write a concise, factual-sounding
+        passage that would answer the query, as if it came from a
+        real document.  This is the core HyDE idea.
+        """
+        hyde_prompt = (
+            "Write a concise, informative passage (2-4 sentences) that would "
+            "appear in a business or financial document answering the following "
+            "question. Do not refer to the question itself — just write the "
+            "passage as if it were extracted from a real document.\n\n"
+            f"Question: {query}\n\nPassage:"
+        )
+
+        try:
+            response = await self.llm.ainvoke(hyde_prompt)
+            from app.services.rag.utils import extract_chunk_content
+
+            passage = extract_chunk_content(response.content).strip()
+            passage = passage.strip('"\' \n')
+            return passage if len(passage) > 15 else None
+        except Exception as e:
+            logger.debug("HyDE LLM call failed: %s", e)
+            return None

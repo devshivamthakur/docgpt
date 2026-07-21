@@ -89,10 +89,14 @@ class DocumentService:
         """Delete a document (file + DB record)."""
         doc = await self.get_user_document(doc_id, user_id)
 
-        # Remove physical file
+        # Remove physical file in a non-blocking background thread
         abs_path = os.path.join(settings.upload_dir, doc.filename)
-        if os.path.exists(abs_path):
-            os.remove(abs_path)
+
+        def _remove_file_sync():
+            if os.path.exists(abs_path):
+                os.remove(abs_path)
+
+        await asyncio.to_thread(_remove_file_sync)
 
         asyncio.create_task(
             asyncio.to_thread(

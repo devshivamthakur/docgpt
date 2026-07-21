@@ -92,11 +92,13 @@ function formatDate(iso: string): string {
 
 const DocumentCard = React.memo(function DocumentCard({
   doc,
+  isDeleting,
   onDelete,
   onReprocess,
   onClick,
 }: {
   doc: Document;
+  isDeleting?: boolean;
   onDelete: (id: number) => void;
   onReprocess: (id: number) => void;
   onClick: (id: number) => void;
@@ -132,7 +134,7 @@ const DocumentCard = React.memo(function DocumentCard({
   return (
     <div
       onClick={handleCardClick}
-      className="group relative cursor-pointer rounded-2xl border border-slate-800 bg-slate-900/80 p-5 transition-all hover:border-slate-700 hover:bg-slate-900/95 hover:shadow-lg"
+      className={`group relative cursor-pointer rounded-2xl border border-slate-800 bg-slate-900/80 p-5 transition-all hover:border-slate-700 hover:bg-slate-900/95 hover:shadow-lg ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}
     >
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
@@ -152,10 +154,17 @@ const DocumentCard = React.memo(function DocumentCard({
 
         <button
           onClick={handleDeleteClick}
-          className="shrink-0 rounded-lg p-1.5 text-slate-600 opacity-0 transition hover:bg-red-500/15 hover:text-red-400 group-hover:opacity-100"
+          disabled={isDeleting}
+          className={`shrink-0 rounded-lg p-1.5 text-slate-600 transition hover:bg-red-500/15 hover:text-red-400 disabled:opacity-100 ${
+            isDeleting ? 'opacity-100 text-red-400' : 'opacity-0 group-hover:opacity-100'
+          }`}
           title="Delete document"
         >
-          <Trash2 className="h-4 w-4" />
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin text-red-400" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
         </button>
       </div>
 
@@ -222,6 +231,7 @@ const DocumentGrid = React.memo(function DocumentGrid({
   const isLoading = useDocumentStore((s) => s.isLoading);
   const deleteDocument = useDocumentStore((s) => s.deleteDocument);
   const reprocessDocument = useDocumentStore((s) => s.reprocessDocument);
+  const deletingIds = useDocumentStore((s) => s.deletingIds);
 
   const displayedDocs = compact ? documents.slice(0, 6) : documents;
 
@@ -271,6 +281,7 @@ const DocumentGrid = React.memo(function DocumentGrid({
           <DocumentCard
             key={doc.id}
             doc={doc}
+            isDeleting={!!deletingIds[doc.id]}
             onDelete={handleDelete}
             onReprocess={handleReprocess}
             onClick={onSelectDoc}

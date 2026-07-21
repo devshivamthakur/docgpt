@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import GuestRoute from './components/GuestRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { BackgroundProgressTracker } from './hooks/useWebSocket';
 import './App.css';
 
 // ── Lazy-loaded page chunks (code splitting) ────────────────────────
@@ -31,6 +32,7 @@ function App() {
   return (
     <Suspense fallback={<PageLoader />}>
       <ErrorBoundary>
+        <BackgroundProgressTracker />
         <Routes>
         <Route
           path="/login"

@@ -69,6 +69,17 @@ async def enqueue_process_document(
     )
 
 
+async def enqueue_eval_and_email(
+    admin_email: str,
+) -> None:
+    """Enqueue an evaluation and email job on the ARQ worker."""
+    pool = await get_arq_pool()
+    await pool.enqueue_job(
+        "run_eval_and_email_task",
+        admin_email,
+    )
+
+
 # ── Worker startup / shutdown hooks ────────────────────────────────────
 
 
@@ -115,6 +126,7 @@ class WorkerSettings:
 
     functions: list = [
         func("app.tasks.document_tasks.process_document", name="process_document"),
+        func("app.tasks.eval_tasks.run_eval_and_email_task", name="run_eval_and_email_task"),
     ]
     redis_settings = redis_settings
     on_startup = worker_startup

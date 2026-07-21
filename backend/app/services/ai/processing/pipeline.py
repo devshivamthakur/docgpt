@@ -26,6 +26,7 @@ from app.services.ai.chunking.table_chunker import TableChunker
 from app.services.ai.chunking.image_chunker import ImageChunker
 from app.services.ai.processing.indexing import Indexer
 from app.services.ai.llm.models import LLM
+from app.core.constants import PROVIDER_OPENAI
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +60,7 @@ class ProcessingPipeline:
         # Lazy initialisation
         self._llm: LLM | None = None
         self._chunk_llm = None  # raw BaseChatModel for chunking
+        self.imageProcessingLLm = None
 
     # ── Public API ──────────────────────────────────────────────────
 
@@ -126,9 +128,12 @@ class ProcessingPipeline:
 
         if parsed.tables or parsed.images:
             llm_raw = await self._get_chunking_llm()
+            image_llm_raw = await self._get_image_processing_llm()
 
             table_coro = asyncio.to_thread(self._chunk_tables, llm_raw, parsed.tables)
-            image_coro = asyncio.to_thread(self._chunk_images, llm_raw, parsed.images)
+            image_coro = asyncio.to_thread(
+                self._chunk_images, image_llm_raw, parsed.images
+            )
             table_chunks, image_chunks = await asyncio.gather(table_coro, image_coro)
 
             logger.debug(
@@ -171,9 +176,16 @@ class ProcessingPipeline:
         """Lazily initialise and return the raw chat model for chunking."""
         if self._chunk_llm is None:
             if self._llm is None:
-                self._llm = LLM(model_name=settings.OPENAI_MODEL_NAME)
+                self._llm = LLM(
+                    model_name=settings.OPENAI_MODEL_NAME, provider=PROVIDER_OPENAI
+                )
             self._chunk_llm = self._llm.llm
         return self._chunk_llm
+
+    async def _get_image_processing_llm(self):
+        if self.imageProcessingLLm is None:
+            self.imageProcessingLLm = LLM(provider=settings.model_provider).llm
+        return self.imageProcessingLLm
 
     def _build_langfuse_config(
         self,

@@ -19,6 +19,7 @@ class MessageRequest(BaseModel):
 
 
 class SourceItem(BaseModel):
+    id: uuid.UUID
     document_id: int
     document_name: str
     page_index: int | None = None

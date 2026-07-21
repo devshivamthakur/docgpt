@@ -11,7 +11,7 @@ from typing import Literal
 from app.core.sanitization import Sanitizer
 from app.schemas.conversation import SourceItem
 from app.services.rag.config import RagConfig
-from app.Prompt.RagPrompt import CONVERSATION_SUMMARY_PROMPT, CONVERSATION_SYSTEM_PROMPT
+from app.Prompt.RagPrompt import CONVERSATION_SUMMARY_PROMPT
 
 logger = logging.getLogger(__name__)
 
@@ -30,47 +30,6 @@ class PromptBuilder:
 
     def __init__(self, config: RagConfig | None = None):
         self.config = config or RagConfig()
-
-    def build(
-        self,
-        query: str,
-        sources: list[SourceItem],
-        history: list[dict] | None = None,
-        summary: str | None = None,
-    ) -> str:
-        """Assemble the full RAG prompt with prompt injection defences.
-
-        Args:
-            query: The user's question (processed/rewritten).
-            sources: Retrieved context sources.
-            history: Recent conversation history.
-            summary: Optional conversation summary.
-
-        Returns:
-            A fully-formatted prompt string ready for the LLM.
-        """
-        context_str = self._format_context(sources)
-        history_str = self._format_history(history or [])
-        summary_str = (summary or "No previous summary.").strip()
-
-        # Sanitize document context to neutralize any embedded injections
-        sanitized_context = Sanitizer.sanitize_context(context_str)
-        safe_context = Sanitizer.wrap_context(
-            sanitized_context.cleaned, source_label="retrieved context"
-        )
-
-        # Build the base prompt with safe content
-        prompt = CONVERSATION_SYSTEM_PROMPT.format(
-            context=safe_context,
-            history=history_str,
-            summary=summary_str,
-            query=query,
-        )
-
-        # Append injection defence instructions to the system portion
-        prompt = Sanitizer.build_safe_system_prompt(prompt)
-
-        return prompt
 
     def build_summary_prompt(
         self,

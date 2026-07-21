@@ -23,6 +23,34 @@ logger = logging.getLogger(__name__)
 MAX_PDF_WORKERS = 4
 
 
+def _is_qr_code(image_bytes: bytes) -> bool:
+    """Detect if the image contains a QR code using OpenCV if available.
+
+    Uses OpenCV's QRCodeDetector, which is fast and does not require
+    external system libraries like zbar. Returns False if OpenCV is not
+    installed or if no QR code is detected in the image.
+    """
+    try:
+        import cv2
+        import numpy as np
+
+        # Convert raw bytes to a numpy array for OpenCV decoding
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_GRAYSCALE)
+        if img is None:
+            return False
+
+        detector = cv2.QRCodeDetector()
+        retval, _ = detector.detect(img)
+        return retval
+    except ImportError:
+        # Gracefully proceed if opencv-python-headless is not installed
+        return False
+    except Exception as e:
+        logger.debug("Failed to check image for QR code: %s", e)
+        return False
+
+
 class PdfParser(DocumentParser):
     """PyMuPDF-based parser for PDF documents.
 
@@ -128,9 +156,33 @@ class PdfParser(DocumentParser):
                 image_list = page.get_images(full=True)
                 for img_index, img in enumerate(image_list):
                     xref = img[0]
+
+                    rects = page.get_image_rects(xref)
+                    if not rects:
+                        continue
+
+                    rect = rects[0]
+
+                    # Ignore tiny displayed images
+                    if rect.width < 100 or rect.height < 100:
+                        continue
+
                     base_image = doc.extract_image(xref)
                     image_bytes = base_image["image"]
+
+                    # Skip QR codes to avoid sending them to multimodal models or indexing them
+                    if _is_qr_code(image_bytes):
+                        logger.info("Skipping QR code image p%d/i%d", i, img_index)
+                        continue
+
                     base64_image = base64.b64encode(image_bytes).decode("utf-8")
+
+                    # Save image for testing (uncomment to write extracted images to disk)
+                    # import os
+                    # os.makedirs("temp", exist_ok=True)
+                    # ext = base_image.get("ext", "png")
+                    # with open(os.path.join("temp", f"page_{i}_img_{img_index}.{ext}"), "wb") as f:
+                    #     f.write(image_bytes)
                     images.append(
                         {
                             "page_index": i,

@@ -12,6 +12,7 @@ import uuid
 from app.db.session import SessionLocal
 from app.services.conversation_service import ConversationService
 from app.services.rag.orchestrator import RagOrchestrator
+from app.services.rag.config import rag_config
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ async def generate_summary_task(
     previous_summary: str | None = None,
 ) -> None:
     """Generate and persist a conversation summary."""
-    if not history:
+    if not history or len(history) < rag_config.max_history_messages:
         return
 
     try:

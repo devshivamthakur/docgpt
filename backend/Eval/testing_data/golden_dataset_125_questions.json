@@ -1,0 +1,1985 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "description": "Extended evaluation dataset for DocGPT - Document Q&A RAG System",
+    "created_at": "2026-07-18",
+    "evaluation_metrics": ["Precision@k", "Recall@k", "MRR", "NDCG"],
+    "k_values": [1, 3, 5, 8],
+    "total_queries": 125,
+    "documents_in_corpus": 3050,
+    "difficulty_distribution": {
+      "easy": 50,
+      "medium": 50,
+      "hard": 25
+    }
+  },
+  "queries": [
+    {
+      "query_id": "Q001",
+      "query_text": "What is Microsoft's goodwill from acquisitions?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 5,
+          "reason": "Directly mentions $51.0 billion goodwill from Activision Blizzard"
+        },
+        {
+          "doc_id": "031988d7-3ba3-4f6c-a908-6e456e87e958",
+          "relevance_score": 4,
+          "reason": "Discusses business combinations and intangible assets valuation"
+        }
+      ],
+      "expected_answer": "Microsoft reported $51.0 billion of goodwill related to Activision Blizzard acquisition in 2024."
+    },
+    {
+      "query_id": "Q002",
+      "query_text": "Tell me about Microsoft's productivity and business transformation strategy",
+      "query_type": "strategic",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 5,
+          "reason": "Explicitly discusses reinventing productivity and business processes"
+        },
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 3,
+          "reason": "Mentions Windows 11 productivity tools"
+        }
+      ],
+      "expected_answer": "Microsoft focuses on continuous innovation through Microsoft 365, LinkedIn, and Dynamics 365."
+    },
+    {
+      "query_id": "Q003",
+      "query_text": "What is the Form 1040 standard deduction for married filing jointly in 2025?",
+      "query_type": "factual",
+      "domain": "tax",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Contains 2025 Form 1040 standard deductions"
+        }
+      ],
+      "expected_answer": "The standard deduction for Married Filing Jointly in 2025 is $31,500."
+    },
+    {
+      "query_id": "Q004",
+      "query_text": "How does Microsoft address trust and cybersecurity?",
+      "query_type": "strategic",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "00dd0e99-e233-4ea3-8ec2-b78860c33224",
+          "relevance_score": 5,
+          "reason": "Discusses Secure Future Initiative and earning trust"
+        },
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 3,
+          "reason": "Mentions cybersecurity challenges"
+        }
+      ],
+      "expected_answer": "Microsoft's Secure Future Initiative ensures solutions meet cybersecurity and trustworthy AI standards."
+    },
+    {
+      "query_id": "Q005",
+      "query_text": "What sustainability initiatives does Microsoft have?",
+      "query_type": "strategic",
+      "domain": "environmental",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "Directly addresses water, waste, and ecosystem management"
+        }
+      ],
+      "expected_answer": "Microsoft has commitments including water access, 89.4% server recycling rate, and AI for biodiversity."
+    },
+    {
+      "query_id": "Q006",
+      "query_text": "What are the components of intangible assets in Microsoft's acquisitions?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Detailed breakdown of technology-based, customer-related, and contract-based intangibles"
+        }
+      ],
+      "expected_answer": "Technology-based ($11,172M), Customer-related ($2,987M), Contract-based ($39M) totaling $27,597M."
+    },
+    {
+      "query_id": "Q007",
+      "query_text": "Tell me about Alphabet's dividend program in Q1 2026",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "Contains exact Q1 2026 dividend details"
+        }
+      ],
+      "expected_answer": "Alphabet declared quarterly dividend of $0.22 per share on April 27, 2026, a 5% increase."
+    },
+    {
+      "query_id": "Q008",
+      "query_text": "What was the Nuance acquisition about and its current status?",
+      "query_type": "factual",
+      "domain": "business",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 5,
+          "reason": "Details Nuance convertible notes and redemption status"
+        }
+      ],
+      "expected_answer": "Nuance convertible notes ($986M) issued 2015-2017 have been substantially all redeemed."
+    },
+    {
+      "query_id": "Q009",
+      "query_text": "How do Microsoft's volume licensing programs work?",
+      "query_type": "operational",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 5,
+          "reason": "Explains volume licensing and Software Assurance"
+        }
+      ],
+      "expected_answer": "Volume licensing allows multiple licenses with varying requirements. Software Assurance provides upgrade rights."
+    },
+    {
+      "query_id": "Q010",
+      "query_text": "What is included in Microsoft 365?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 5,
+          "reason": "Describes Microsoft 365 as AI-first platform"
+        }
+      ],
+      "expected_answer": "Microsoft 365 is an AI-first platform bringing together Office and productivity services."
+    },
+    {
+      "query_id": "Q011",
+      "query_text": "How many organizations did Microsoft support through the Black Communities program?",
+      "query_type": "factual",
+      "domain": "social_impact",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "States 3,000+ organizations in 1,900 communities"
+        }
+      ],
+      "expected_answer": "More than 3,000 organizations in nearly 1,900 Black and African American communities."
+    },
+    {
+      "query_id": "Q012",
+      "query_text": "What tax forms are included in this document collection?",
+      "query_type": "factual",
+      "domain": "tax",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Form 1040 comprehensive tax form"
+        },
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 5,
+          "reason": "Form 1040 income section"
+        }
+      ],
+      "expected_answer": "The collection contains 2025 Form 1040 tax forms with income, deductions, and credits sections."
+    },
+    {
+      "query_id": "Q013",
+      "query_text": "What Windows 11 features are mentioned in the annual report?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 5,
+          "reason": "Lists Windows 11 innovations and features"
+        }
+      ],
+      "expected_answer": "Windows 11 includes Copilot, security/privacy features, Dev Home, and performance innovations."
+    },
+    {
+      "query_id": "Q014",
+      "query_text": "How does Microsoft's server products compete in the market?",
+      "query_type": "competitive_analysis",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 5,
+          "reason": "Discusses competition from HP, IBM, Oracle, and Linux"
+        }
+      ],
+      "expected_answer": "Competes with HP, IBM, Oracle Unix systems, and various Linux offerings."
+    },
+    {
+      "query_id": "Q015",
+      "query_text": "What farm advisory agent investor topics are covered?",
+      "query_type": "factual",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "0306a8b9-7039-45a9-8f6d-c0e4170dddac",
+          "relevance_score": 5,
+          "reason": "Lists scaling, ROI, economics, acquisition, and retention"
+        }
+      ],
+      "expected_answer": "Covers scaling infrastructure, investor ROI, unit economics, customer acquisition, and retention."
+    },
+    {
+      "query_id": "Q016",
+      "query_text": "What is the standard deduction for a single filer in 2025?",
+      "query_type": "factual",
+      "domain": "tax",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Contains $15,750 deduction for single filers"
+        }
+      ],
+      "expected_answer": "The 2025 standard deduction for Single/MFS is $15,750."
+    },
+    {
+      "query_id": "Q017",
+      "query_text": "What is the Head of Household standard deduction for 2025?",
+      "query_type": "factual",
+      "domain": "tax",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Lists Head of Household deduction as $23,625"
+        }
+      ],
+      "expected_answer": "The 2025 standard deduction for Head of Household is $23,625."
+    },
+    {
+      "query_id": "Q018",
+      "query_text": "Describe the complete tax calculation process from the Form 1040",
+      "query_type": "procedural",
+      "domain": "tax",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Complete step-by-step tax calculation"
+        }
+      ],
+      "expected_answer": "Calculate taxable income, apply deductions, add taxes/credits, determine refund or payment."
+    },
+    {
+      "query_id": "Q019",
+      "query_text": "What was Microsoft's dividend per share in fiscal 2024?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 5,
+          "reason": "Shows $0.75 quarterly dividend, $3.00 total in 2024"
+        }
+      ],
+      "expected_answer": "Microsoft paid $0.75 per quarter in fiscal 2024, totaling $3.00 per share."
+    },
+    {
+      "query_id": "Q020",
+      "query_text": "What was Microsoft's dividend per share in fiscal 2023?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 5,
+          "reason": "Shows $0.68 quarterly, $2.72 total in 2023"
+        }
+      ],
+      "expected_answer": "Microsoft paid $0.68 per quarter in fiscal 2023, totaling $2.72 per share."
+    },
+    {
+      "query_id": "Q021",
+      "query_text": "What is the role of Schedule EIC in Form 1040?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 4,
+          "reason": "Mentions Schedule EIC for qualifying children"
+        }
+      ],
+      "expected_answer": "Schedule EIC is attached for taxpayers claiming Earned Income Tax Credit with qualifying children."
+    },
+    {
+      "query_id": "Q022",
+      "query_text": "How does AI benefit ecosystem and biodiversity management?",
+      "query_type": "strategic",
+      "domain": "environmental",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "Discusses AI-assisted bioacoustics for ecosystem management"
+        }
+      ],
+      "expected_answer": "AI enables ecosystem management through AI-assisted bioacoustics monitoring and solutions."
+    },
+    {
+      "query_id": "Q023",
+      "query_text": "What is Microsoft's Secure Future Initiative?",
+      "query_type": "strategic",
+      "domain": "security",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "00dd0e99-e233-4ea3-8ec2-b78860c33224",
+          "relevance_score": 5,
+          "reason": "Defines Secure Future Initiative for design and operation"
+        }
+      ],
+      "expected_answer": "Initiative advancing how Microsoft designs, builds, tests, and operates technology securely."
+    },
+    {
+      "query_id": "Q024",
+      "query_text": "How is Form W-2 used in income reporting on Form 1040?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 5,
+          "reason": "States W-2 box 1 amount goes on line 1a"
+        }
+      ],
+      "expected_answer": "Total W-2 box 1 amount is reported on Form 1040 line 1a."
+    },
+    {
+      "query_id": "Q025",
+      "query_text": "What financial instruments did Alphabet issue in Q1 2026?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "Mentions $31.1 billion senior unsecured notes"
+        }
+      ],
+      "expected_answer": "Alphabet issued $31.1 billion in senior unsecured notes for general corporate purposes."
+    },
+    {
+      "query_id": "Q026",
+      "query_text": "What dependent-related information is covered in Form 1040?",
+      "query_type": "tax_info",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Contains dependent instructions and age requirements"
+        }
+      ],
+      "expected_answer": "Form 1040 covers dependent exemptions, age requirements, and blind dependent rules."
+    },
+    {
+      "query_id": "Q027",
+      "query_text": "Which Microsoft products enhance workplace collaboration?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 5,
+          "reason": "Names Microsoft 365, LinkedIn, Dynamics 365"
+        }
+      ],
+      "expected_answer": "Microsoft 365, LinkedIn, and Dynamics 365 are leading productivity and collaboration platforms."
+    },
+    {
+      "query_id": "Q028",
+      "query_text": "What government and nonprofit programs does Microsoft support?",
+      "query_type": "strategic",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 4,
+          "reason": "Mentions tech acceleration for communities"
+        }
+      ],
+      "expected_answer": "Microsoft supports programs like Nonprofit Tech Acceleration for Black Communities."
+    },
+    {
+      "query_id": "Q029",
+      "query_text": "How is goodwill treated for tax purposes?",
+      "query_type": "tax_accounting",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 5,
+          "reason": "States goodwill not deductible for income tax"
+        }
+      ],
+      "expected_answer": "Goodwill from acquisitions is generally not deductible for income tax purposes."
+    },
+    {
+      "query_id": "Q030",
+      "query_text": "What is Microsoft's Surface device strategy?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 3,
+          "reason": "Mentions Surface family in device strategy"
+        }
+      ],
+      "expected_answer": "Surface family devices drive innovation and stimulate demand in Windows ecosystem."
+    },
+    {
+      "query_id": "Q031",
+      "query_text": "What are the detailed components and values of intangible assets?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Breakdown with gross and amortized values"
+        }
+      ],
+      "expected_answer": "Technology-based $11,172M net, Customer-related $2,987M net, Contract-based $39M net."
+    },
+    {
+      "query_id": "Q032",
+      "query_text": "How does Microsoft's cybersecurity capability differentiate it from competitors?",
+      "query_type": "competitive",
+      "domain": "security",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 5,
+          "reason": "Explains cybersecurity differentiation"
+        }
+      ],
+      "expected_answer": "Microsoft's ability to solve complex cybersecurity challenges effectively differentiates it."
+    },
+    {
+      "query_id": "Q033",
+      "query_text": "What types of employee income are reported on Form 1040?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 5,
+          "reason": "Lists W-2, household wages, tips, Medicaid waiver, dependent care"
+        }
+      ],
+      "expected_answer": "Employee income includes W-2 wages, household wages, tips, Medicaid waiver, and dependent care benefits."
+    },
+    {
+      "query_id": "Q034",
+      "query_text": "What is Microsoft's cloud hardware recycling rate?",
+      "query_type": "environmental",
+      "domain": "environmental",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "States 89.4% reuse and recycle rate"
+        }
+      ],
+      "expected_answer": "Microsoft achieved 89.4% reuse and recycle rate for servers and components."
+    },
+    {
+      "query_id": "Q035",
+      "query_text": "Where can I find information about Activision Blizzard acquisition details?",
+      "query_type": "procedural",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 5,
+          "reason": "References Note 8 for business combinations"
+        }
+      ],
+      "expected_answer": "See Note 8 – Business Combinations in the annual report for detailed acquisition information."
+    },
+    {
+      "query_id": "Q036",
+      "query_text": "How are dependent exemptions and credits handled in 2025 tax calculations?",
+      "query_type": "tax_change",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 4,
+          "reason": "Form structure shows dependent treatment"
+        }
+      ],
+      "expected_answer": "Dependents affect calculations through exemptions and credits like Child Tax Credit."
+    },
+    {
+      "query_id": "Q037",
+      "query_text": "What is Microsoft's approach to creating personal computing experiences?",
+      "query_type": "strategic",
+      "domain": "technology",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 3,
+          "reason": "Mentions creating personal computing"
+        }
+      ],
+      "expected_answer": "Microsoft aims to create personal computing through innovative technology."
+    },
+    {
+      "query_id": "Q038",
+      "query_text": "Which documents discuss specific financial performance metrics?",
+      "query_type": "meta",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Detailed financial metrics for assets"
+        },
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 5,
+          "reason": "Dividend payment metrics"
+        }
+      ],
+      "expected_answer": "Multiple documents contain financial metrics including assets, dividends, and financing."
+    },
+    {
+      "query_id": "Q039",
+      "query_text": "What global communities does Microsoft focus on?",
+      "query_type": "social_impact",
+      "domain": "social_impact",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "Focus on young people, women, rural, Global South"
+        }
+      ],
+      "expected_answer": "Microsoft focuses on young people, women, rural communities, and the Global South."
+    },
+    {
+      "query_id": "Q040",
+      "query_text": "How are expense items structured and presented in Form 1040?",
+      "query_type": "analytical",
+      "domain": "tax",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Shows step progression from income to final calculations"
+        }
+      ],
+      "expected_answer": "Form 1040 progresses through deductions, dependencies, credits to final payment/refund."
+    },
+    {
+      "query_id": "Q041",
+      "query_text": "What is the current redemption status of Nuance convertible notes?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 5,
+          "reason": "States substantially all redeemed"
+        }
+      ],
+      "expected_answer": "Substantially all $986 million Nuance convertible notes have been redeemed."
+    },
+    {
+      "query_id": "Q042",
+      "query_text": "What are Microsoft's zero waste and circular economy goals?",
+      "query_type": "environmental",
+      "domain": "environmental",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "Discusses zero waste journey and circularity"
+        }
+      ],
+      "expected_answer": "Microsoft's zero waste journey includes waste reduction and advancing circularity for hardware."
+    },
+    {
+      "query_id": "Q043",
+      "query_text": "What was the total dividend payout in fiscal 2024 in millions?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 5,
+          "reason": "Shows $22,296 million total"
+        }
+      ],
+      "expected_answer": "Microsoft paid $22,296 million in total dividends in fiscal 2024."
+    },
+    {
+      "query_id": "Q044",
+      "query_text": "What was the total dividend payout in fiscal 2023 in millions?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 5,
+          "reason": "Shows $20,230 million total"
+        }
+      ],
+      "expected_answer": "Microsoft paid $20,230 million in total dividends in fiscal 2023."
+    },
+    {
+      "query_id": "Q045",
+      "query_text": "What percentage increase did Microsoft's dividend have from 2023 to 2024?",
+      "query_type": "analytical",
+      "domain": "financial",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 5,
+          "reason": "Can calculate from $0.68 to $0.75 increase"
+        }
+      ],
+      "expected_answer": "Dividend increased approximately 10.3% from $0.68 to $0.75 per quarter."
+    },
+    {
+      "query_id": "Q046",
+      "query_text": "How much did Alphabet increase its dividend in April 2026?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "States 5% increase from $0.21 to $0.22"
+        }
+      ],
+      "expected_answer": "Alphabet increased dividend 5% from $0.21 to $0.22 per share."
+    },
+    {
+      "query_id": "Q047",
+      "query_text": "What is the accumulation of technology-based intangible assets after amortization?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Technology-based gross $21,913M minus $10,741M amortization"
+        }
+      ],
+      "expected_answer": "Technology-based intangible assets: $21,913M gross, $10,741M accumulated amortization, $11,172M net."
+    },
+    {
+      "query_id": "Q048",
+      "query_text": "What is the accumulation of customer-related intangible assets after amortization?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Customer-related $6,038M minus $3,051M amortization"
+        }
+      ],
+      "expected_answer": "Customer-related intangibles: $6,038M gross, $3,051M amortization, $2,987M net."
+    },
+    {
+      "query_id": "Q049",
+      "query_text": "What are contract-based intangible assets in acquisitions?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Shows contract-based $58M gross"
+        }
+      ],
+      "expected_answer": "Contract-based intangibles: $58M gross, $19M amortization, $39M net value."
+    },
+    {
+      "query_id": "Q050",
+      "query_text": "Are there any material impairments of intangible assets mentioned?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "States no material impairments identified"
+        }
+      ],
+      "expected_answer": "No material impairments of intangible assets were identified in fiscal 2024, 2023, or 2022."
+    },
+    {
+      "query_id": "Q051",
+      "query_text": "What household income types are reportable on Form 1040?",
+      "query_type": "tax_info",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 5,
+          "reason": "Mentions household employee wages line"
+        }
+      ],
+      "expected_answer": "Household employee wages not reported on W-2 are separately reportable on Form 1040."
+    },
+    {
+      "query_id": "Q052",
+      "query_text": "How are tip income and Medicaid waiver payments reported?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 5,
+          "reason": "Lists tip income and Medicaid waiver reporting"
+        }
+      ],
+      "expected_answer": "Tip income and Medicaid waiver payments have specific lines on Form 1040 for reporting."
+    },
+    {
+      "query_id": "Q053",
+      "query_text": "What is the purpose of Line 1e on Form 1040?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffd9b60a-8ff8-4e19-b63e-5486b20d328d",
+          "relevance_score": 4,
+          "reason": "Mentions taxable dependent care benefits"
+        }
+      ],
+      "expected_answer": "Line 1e is for taxable dependent care benefits from Form 2441."
+    },
+    {
+      "query_id": "Q054",
+      "query_text": "What is Microsoft's position on privacy and digital safety?",
+      "query_type": "strategic",
+      "domain": "security",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "00dd0e99-e233-4ea3-8ec2-b78860c33224",
+          "relevance_score": 4,
+          "reason": "Discusses privacy and digital safety commitment"
+        }
+      ],
+      "expected_answer": "Microsoft is committed to privacy and digital safety as core trust principles."
+    },
+    {
+      "query_id": "Q055",
+      "query_text": "How does Microsoft position trustworthy AI?",
+      "query_type": "strategic",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "00dd0e99-e233-4ea3-8ec2-b78860c33224",
+          "relevance_score": 5,
+          "reason": "Emphasizes trustworthy AI as key trust element"
+        }
+      ],
+      "expected_answer": "Microsoft prioritizes trustworthy AI as essential for earning customer trust."
+    },
+    {
+      "query_id": "Q056",
+      "query_text": "What operating system options exist for servers mentioned?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 5,
+          "reason": "Mentions Unix and Linux server options"
+        }
+      ],
+      "expected_answer": "Server platforms include Windows, various Unix versions, and Linux operating systems."
+    },
+    {
+      "query_id": "Q057",
+      "query_text": "What is Microsoft's water access target?",
+      "query_type": "environmental",
+      "domain": "environmental",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 3,
+          "reason": "Mentions water access target"
+        }
+      ],
+      "expected_answer": "Microsoft has established a water access target as part of sustainability goals."
+    },
+    {
+      "query_id": "Q058",
+      "query_text": "How does Microsoft approach datacenter waste reduction?",
+      "query_type": "environmental",
+      "domain": "environmental",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 4,
+          "reason": "Discusses reducing waste at datacenters"
+        }
+      ],
+      "expected_answer": "Microsoft reduces waste at campuses and datacenters through circular economy practices."
+    },
+    {
+      "query_id": "Q059",
+      "query_text": "What is included in Microsoft's packaging circularity goals?",
+      "query_type": "environmental",
+      "domain": "environmental",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 4,
+          "reason": "Mentions advancing circularity for packaging"
+        }
+      ],
+      "expected_answer": "Microsoft advances circularity for packaging as part of zero waste journey."
+    },
+    {
+      "query_id": "Q060",
+      "query_text": "What specific percentage of servers are reused or recycled?",
+      "query_type": "factual",
+      "domain": "environmental",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "States exact 89.4% rate"
+        }
+      ],
+      "expected_answer": "89.4% of servers and components are reused or recycled."
+    },
+    {
+      "query_id": "Q061",
+      "query_text": "What communities benefit from Microsoft's social impact programs?",
+      "query_type": "social_impact",
+      "domain": "social_impact",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "Lists employee communities and social impact org employees"
+        }
+      ],
+      "expected_answer": "Microsoft's programs benefit employee communities and social impact organization employees."
+    },
+    {
+      "query_id": "Q062",
+      "query_text": "What is the scale of Microsoft's community program reach in 2024?",
+      "query_type": "factual",
+      "domain": "social_impact",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "3,000+ orgs in 1,900 communities"
+        }
+      ],
+      "expected_answer": "Microsoft reached over 3,000 organizations in nearly 1,900 Black and African American communities."
+    },
+    {
+      "query_id": "Q063",
+      "query_text": "What is the Nonprofit Tech Acceleration program focus?",
+      "query_type": "strategic",
+      "domain": "social_impact",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "Helps organizations use technical solutions"
+        }
+      ],
+      "expected_answer": "Helps nonprofits use technical solutions to modernize and streamline operations."
+    },
+    {
+      "query_id": "Q064",
+      "query_text": "How does Microsoft's leadership address racial injustice?",
+      "query_type": "strategic",
+      "domain": "social_impact",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "Discusses racial injustice and inequity work"
+        }
+      ],
+      "expected_answer": "Microsoft collaborates with partners to address racial injustice through community projects."
+    },
+    {
+      "query_id": "Q065",
+      "query_text": "What is the total gross amount of all intangible assets?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Can sum: $21,913 + $6,038 + $58 = $28,009M"
+        }
+      ],
+      "expected_answer": "Total gross intangible assets: $44,509 million across all categories."
+    },
+    {
+      "query_id": "Q066",
+      "query_text": "What is the total accumulated amortization of intangible assets?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Total accumulated: $10,741 + $3,051 + $19 = $16,912M"
+        }
+      ],
+      "expected_answer": "Total accumulated amortization: $16,912 million."
+    },
+    {
+      "query_id": "Q067",
+      "query_text": "What is the net book value of all intangible assets?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 5,
+          "reason": "Net total: $11,172 + $2,987 + $39 = $14,198M"
+        }
+      ],
+      "expected_answer": "Net book value of intangible assets: $27,597 million."
+    },
+    {
+      "query_id": "Q068",
+      "query_text": "When will the Alphabet dividend be payable to shareholders?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "Payable June 15, 2026"
+        }
+      ],
+      "expected_answer": "The Alphabet dividend is payable on June 15, 2026 to shareholders of record."
+    },
+    {
+      "query_id": "Q069",
+      "query_text": "What is the record date for Alphabet's dividend?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "Record date June 8, 2026"
+        }
+      ],
+      "expected_answer": "The record date for Alphabet's dividend is June 8, 2026."
+    },
+    {
+      "query_id": "Q070",
+      "query_text": "Which Alphabet share classes are eligible for the dividend?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "Class A, B, and C shares"
+        }
+      ],
+      "expected_answer": "Class A, Class B, and Class C shares are all eligible for the dividend."
+    },
+    {
+      "query_id": "Q071",
+      "query_text": "What is Microsoft's approach to business process transformation?",
+      "query_type": "strategic",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 5,
+          "reason": "Discusses reinventing business processes"
+        }
+      ],
+      "expected_answer": "Microsoft helps customers create secure, productive work environments through integrated technology."
+    },
+    {
+      "query_id": "Q072",
+      "query_text": "How does Microsoft ensure continuous innovation in productivity?",
+      "query_type": "strategic",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 4,
+          "reason": "Growth depends on continuous innovation"
+        }
+      ],
+      "expected_answer": "Growth depends on securely delivering continuous innovation in productivity tools."
+    },
+    {
+      "query_id": "Q073",
+      "query_text": "What tax forms should I consult for business deductions?",
+      "query_type": "tax_advice",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 3,
+          "reason": "Form 1040 references schedules for business"
+        }
+      ],
+      "expected_answer": "Refer to applicable schedules and forms specific to business income and deductions."
+    },
+    {
+      "query_id": "Q074",
+      "query_text": "What does Software Assurance provide to customers?",
+      "query_type": "product",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 5,
+          "reason": "Provides rights to new software and upgrades"
+        }
+      ],
+      "expected_answer": "Software Assurance provides rights to new software and upgrades over contract period."
+    },
+    {
+      "query_id": "Q075",
+      "query_text": "How long is a typical Software Assurance contract period?",
+      "query_type": "product",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 2,
+          "reason": "Mentions contract period but not specific duration"
+        }
+      ],
+      "expected_answer": "Contract periods vary based on customer agreements and specific arrangements."
+    },
+    {
+      "query_id": "Q076",
+      "query_text": "What are the programmatic requirements for Microsoft volume licensing?",
+      "query_type": "operational",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 4,
+          "reason": "Programs have varying requirements"
+        }
+      ],
+      "expected_answer": "Volume licensing programs have varying programmatic requirements customized to customer needs."
+    },
+    {
+      "query_id": "Q077",
+      "query_text": "What benefits do volume licensing programs provide?",
+      "query_type": "product",
+      "domain": "business",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 5,
+          "reason": "Programs provide customized benefits"
+        }
+      ],
+      "expected_answer": "Benefits include flexible licensing, cost savings, and program options meeting diverse needs."
+    },
+    {
+      "query_id": "Q078",
+      "query_text": "How does the 2024 annual report structure financial information?",
+      "query_type": "meta",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 3,
+          "reason": "Shows report includes detailed notes"
+        }
+      ],
+      "expected_answer": "Report contains detailed financial statements with notes on acquisitions, assets, and valuations."
+    },
+    {
+      "query_id": "Q079",
+      "query_text": "What filing date appears on the Microsoft annual report?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 4,
+          "reason": "Shows 7/17/26, 4:50 PM filing date"
+        }
+      ],
+      "expected_answer": "The report was filed on 7/17/26 at 4:50 PM."
+    },
+    {
+      "query_id": "Q080",
+      "query_text": "Which page number contains goodwill information?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 5,
+          "reason": "Page 48 mentioned in metadata"
+        }
+      ],
+      "expected_answer": "Goodwill information appears on page 48 of the annual report."
+    },
+    {
+      "query_id": "Q081",
+      "query_text": "What document discusses trust, cybersecurity, and privacy?",
+      "query_type": "meta",
+      "domain": "security",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "00dd0e99-e233-4ea3-8ec2-b78860c33224",
+          "relevance_score": 5,
+          "reason": "Page 4 comprehensive trust discussion"
+        }
+      ],
+      "expected_answer": "Page 4 of the annual report comprehensively discusses trust, security, and privacy."
+    },
+    {
+      "query_id": "Q082",
+      "query_text": "Which page covers community and social responsibility programs?",
+      "query_type": "meta",
+      "domain": "social_impact",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 5,
+          "reason": "Community programs on page 10"
+        }
+      ],
+      "expected_answer": "Community and social responsibility programs are discussed on page 10."
+    },
+    {
+      "query_id": "Q083",
+      "query_text": "Where is information about sustainability and environmental initiatives located?",
+      "query_type": "meta",
+      "domain": "environmental",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "Sustainability on page 5"
+        }
+      ],
+      "expected_answer": "Sustainability information is located on page 5 of the annual report."
+    },
+    {
+      "query_id": "Q084",
+      "query_text": "Which section covers Microsoft's product strategy and innovation?",
+      "query_type": "meta",
+      "domain": "technology",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 5,
+          "reason": "Product innovation on page 9"
+        }
+      ],
+      "expected_answer": "Product strategy and innovation are covered on page 9."
+    },
+    {
+      "query_id": "Q085",
+      "query_text": "What is the relationship between Alphabet and Google in the documents?",
+      "query_type": "analytical",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 3,
+          "reason": "Alphabet earnings release mentions corporate structure"
+        }
+      ],
+      "expected_answer": "Alphabet is the parent company overseeing corporate operations and capital allocation."
+    },
+    {
+      "query_id": "Q086",
+      "query_text": "What recent financial transactions did Alphabet complete?",
+      "query_type": "factual",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 5,
+          "reason": "Issued senior unsecured notes in Q1 2026"
+        }
+      ],
+      "expected_answer": "Alphabet issued $31.1 billion in senior unsecured notes in Q1 2026."
+    },
+    {
+      "query_id": "Q087",
+      "query_text": "How are Microsoft's different product segments organized?",
+      "query_type": "analytical",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 4,
+          "reason": "References productivity and personal computing segments"
+        }
+      ],
+      "expected_answer": "Microsoft organizes around Productivity, Business Processes, and Personal Computing segments."
+    },
+    {
+      "query_id": "Q088",
+      "query_text": "What competitive pressures does Microsoft face in each segment?",
+      "query_type": "competitive_analysis",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 4,
+          "reason": "Discusses server and operating system competition"
+        }
+      ],
+      "expected_answer": "Microsoft faces competition from diverse players including established vendors and open-source platforms."
+    },
+    {
+      "query_id": "Q089",
+      "query_text": "What role does Dev Home play in Microsoft's developer strategy?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 5,
+          "reason": "Dev Home is open-source experience for developer productivity"
+        }
+      ],
+      "expected_answer": "Dev Home is an open-source experience helping developer productivity in Windows."
+    },
+    {
+      "query_id": "Q090",
+      "query_text": "What are the security and privacy features of Windows 11?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 5,
+          "reason": "Details security features and privacy protections"
+        }
+      ],
+      "expected_answer": "Windows 11 includes operating system security, application security, and user/identity security."
+    },
+    {
+      "query_id": "Q091",
+      "query_text": "How does Copilot integrate into Windows 11?",
+      "query_type": "product",
+      "domain": "technology",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 5,
+          "reason": "Mentions Copilot in Windows"
+        }
+      ],
+      "expected_answer": "Copilot in Windows is part of performance and productivity innovations."
+    },
+    {
+      "query_id": "Q092",
+      "query_text": "What is the market strategy for first-party Microsoft devices?",
+      "query_type": "strategic",
+      "domain": "technology",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 4,
+          "reason": "Commits to designing devices to drive innovation"
+        }
+      ],
+      "expected_answer": "Microsoft designs devices to drive innovation, create categories, and stimulate ecosystem demand."
+    },
+    {
+      "query_id": "Q093",
+      "query_text": "What assumptions underlie Microsoft's intangible asset valuations?",
+      "query_type": "analytical",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "031988d7-3ba3-4f6c-a908-6e456e87e958",
+          "relevance_score": 5,
+          "reason": "Judgment required for future tax consequences"
+        }
+      ],
+      "expected_answer": "Valuations require judgement on future economic consequences and market outcomes."
+    },
+    {
+      "query_id": "Q094",
+      "query_text": "How do interest and penalties affect income tax accounting?",
+      "query_type": "tax_accounting",
+      "domain": "tax",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "031988d7-3ba3-4f6c-a908-6e456e87e958",
+          "relevance_score": 4,
+          "reason": "Discusses accounting for interest and penalties"
+        }
+      ],
+      "expected_answer": "Companies account for interest and penalties associated with uncertain tax positions."
+    },
+    {
+      "query_id": "Q095",
+      "query_text": "What is significant about residual value of intangible assets?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 4,
+          "reason": "States no significant residual value"
+        }
+      ],
+      "expected_answer": "No significant residual value is estimated for intangible assets."
+    },
+    {
+      "query_id": "Q096",
+      "query_text": "How are weighted-average depreciation lives determined?",
+      "query_type": "financial",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 3,
+          "reason": "Mentions weighted amortization but limited detail"
+        }
+      ],
+      "expected_answer": "Weighted-average lives reflect expected useful lives of assets."
+    },
+    {
+      "query_id": "Q097",
+      "query_text": "What are the credit and payment calculation mechanics on Form 1040?",
+      "query_type": "analytical",
+      "domain": "tax",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 5,
+          "reason": "Detailed credit and payment calculations"
+        }
+      ],
+      "expected_answer": "Credits are claimed and compared against tax liability to determine final payment or refund."
+    },
+    {
+      "query_id": "Q098",
+      "query_text": "What direct deposit options are available for tax refunds?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 4,
+          "reason": "Mentions direct deposit options via Form 8888"
+        }
+      ],
+      "expected_answer": "Taxpayers can elect direct deposit options for refunds using Form 8888."
+    },
+    {
+      "query_id": "Q099",
+      "query_text": "How is the Child Tax Credit claimed on Form 1040?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 4,
+          "reason": "References Schedule 8812 for Child Tax Credit"
+        }
+      ],
+      "expected_answer": "Child Tax Credit is claimed using Schedule 8812 and referenced on Form 1040."
+    },
+    {
+      "query_id": "Q100",
+      "query_text": "What is the qualified business income deduction process?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 4,
+          "reason": "References Form 8995/8995-A for QBI deduction"
+        }
+      ],
+      "expected_answer": "QBI deduction is calculated using Form 8995 or Form 8995-A and applied to taxable income."
+    },
+    {
+      "query_id": "Q101",
+      "query_text": "What documents are required to be attached to Form 1040?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 4,
+          "reason": "Mentions required schedules and forms"
+        }
+      ],
+      "expected_answer": "Required attachments include applicable schedules (8812, 8995, etc) and Forms (2441, 8888)."
+    },
+    {
+      "query_id": "Q102",
+      "query_text": "What penalties apply to late tax payments?",
+      "query_type": "tax_info",
+      "domain": "tax",
+      "difficulty": "medium",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 2,
+          "reason": "Mentions penalties but limited detail"
+        }
+      ],
+      "expected_answer": "Late payment penalties are assessed on unpaid tax amounts based on IRS rules."
+    },
+    {
+      "query_id": "Q103",
+      "query_text": "How is estimated tax calculated and paid?",
+      "query_type": "tax_procedure",
+      "domain": "tax",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 3,
+          "reason": "References estimated tax payments"
+        }
+      ],
+      "expected_answer": "Estimated taxes are calculated and paid quarterly for those with variable income."
+    },
+    {
+      "query_id": "Q104",
+      "query_text": "What is the Combined Annual Report 2024 document page count?",
+      "query_type": "meta",
+      "domain": "financial",
+      "difficulty": "easy",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 2,
+          "reason": "References annual report but page count not specified"
+        }
+      ],
+      "expected_answer": "The annual report contains extensive financial and operational disclosures across multiple pages."
+    },
+    {
+      "query_id": "Q105",
+      "query_text": "How does Microsoft's strategy differ across geographic regions?",
+      "query_type": "analytical",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 3,
+          "reason": "References Global South and community focus"
+        }
+      ],
+      "expected_answer": "Microsoft tailors strategies for different regions including focus on Global South development."
+    },
+    {
+      "query_id": "Q106",
+      "query_text": "What emerging technology trends does Microsoft highlight?",
+      "query_type": "analytical",
+      "domain": "technology",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 4,
+          "reason": "Highlights AI integration and developer tools"
+        }
+      ],
+      "expected_answer": "Microsoft emphasizes AI integration, developer productivity, and security innovations."
+    },
+    {
+      "query_id": "Q107",
+      "query_text": "How does Microsoft compare to major competitors in each sector?",
+      "query_type": "competitive_analysis",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 4,
+          "reason": "Discusses competitive landscape"
+        }
+      ],
+      "expected_answer": "Microsoft competes effectively through comprehensive solutions and deep market integration."
+    },
+    {
+      "query_id": "Q108",
+      "query_text": "What is the relationship between acquisitions and Microsoft's growth?",
+      "query_type": "analytical",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 4,
+          "reason": "Goodwill reflects strategic acquisitions"
+        }
+      ],
+      "expected_answer": "Strategic acquisitions like Activision Blizzard expand Microsoft's capabilities and market reach."
+    },
+    {
+      "query_id": "Q109",
+      "query_text": "How does Microsoft's business model generate shareholder value?",
+      "query_type": "analytical",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 4,
+          "reason": "Consistent dividend growth reflects value generation"
+        }
+      ],
+      "expected_answer": "Dividend growth demonstrates strong profitability and capital allocation discipline."
+    },
+    {
+      "query_id": "Q110",
+      "query_text": "What are the key differences in Microsoft's market segments?",
+      "query_type": "analytical",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "0252299b-a26b-4414-9c9e-970e0214fbef",
+          "relevance_score": 5,
+          "reason": "Describes Productivity and Personal Computing segments"
+        }
+      ],
+      "expected_answer": "Segments vary in products (Office vs Windows) but share innovation and integration strategies."
+    },
+    {
+      "query_id": "Q111",
+      "query_text": "How do tax incentives affect Microsoft's R&D investments?",
+      "query_type": "analytical",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "031988d7-3ba3-4f6c-a908-6e456e87e958",
+          "relevance_score": 2,
+          "reason": "General tax accounting but no specific incentives mentioned"
+        }
+      ],
+      "expected_answer": "Tax treatment of R&D affects investment return calculations and strategic prioritization."
+    },
+    {
+      "query_id": "Q112",
+      "query_text": "What sustainability metrics are most critical for Microsoft's ESG performance?",
+      "query_type": "analytical",
+      "domain": "environmental",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ff526245-bb4e-42a5-91fb-1ba58f19d381",
+          "relevance_score": 5,
+          "reason": "Water, waste, and recycling metrics"
+        }
+      ],
+      "expected_answer": "Key metrics include water access, waste reduction, recycling rates, and biodiversity initiatives."
+    },
+    {
+      "query_id": "Q113",
+      "query_text": "How has Microsoft's social impact grown over multiple years?",
+      "query_type": "analytical",
+      "domain": "social_impact",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "003790e3-f7aa-4b58-ac03-107a8bcdc9b1",
+          "relevance_score": 4,
+          "reason": "Mentions program growth in fiscal 2024"
+        }
+      ],
+      "expected_answer": "Microsoft has grown community programs significantly reaching thousands of organizations."
+    },
+    {
+      "query_id": "Q114",
+      "query_text": "What is the strategic importance of trustworthy AI to Microsoft?",
+      "query_type": "analytical",
+      "domain": "technology",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00dd0e99-e233-4ea3-8ec2-b78860c33224",
+          "relevance_score": 5,
+          "reason": "Emphasizes trustworthy AI as core trust pillar"
+        }
+      ],
+      "expected_answer": "Trustworthy AI is essential to earning customer trust and supporting responsible innovation."
+    },
+    {
+      "query_id": "Q115",
+      "query_text": "How do Microsoft's security initiatives address modern threats?",
+      "query_type": "analytical",
+      "domain": "security",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ffc3359f-4f2e-4d14-afa7-82fbe49f49f8",
+          "relevance_score": 4,
+          "reason": "Addresses complex cybersecurity challenges"
+        }
+      ],
+      "expected_answer": "Microsoft's comprehensive approach addresses operating system, application, and identity security."
+    },
+    {
+      "query_id": "Q116",
+      "query_text": "What is the long-term vision for Microsoft's product ecosystem?",
+      "query_type": "analytical",
+      "domain": "technology",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "feb1b9d9-21d7-402b-a075-975210585ef4",
+          "relevance_score": 4,
+          "reason": "Commits to device innovation and ecosystem stimulation"
+        }
+      ],
+      "expected_answer": "Vision emphasizes integrated solutions, innovation across devices, and ecosystem growth."
+    },
+    {
+      "query_id": "Q117",
+      "query_text": "How does Alphabet's financial strategy differ from Microsoft's?",
+      "query_type": "comparative_analysis",
+      "domain": "financial",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "ff2becf2-4ede-4063-8893-4abdd4328155",
+          "relevance_score": 3,
+          "reason": "Shows Alphabet capital raising approach"
+        },
+        {
+          "doc_id": "fffdc4f2-9b21-458d-8db9-748f66de0ed4",
+          "relevance_score": 3,
+          "reason": "Shows Microsoft dividend approach"
+        }
+      ],
+      "expected_answer": "Both focus on shareholder returns but through different mechanisms and capital structures."
+    },
+    {
+      "query_id": "Q118",
+      "query_text": "What governance structures support Microsoft's decision-making?",
+      "query_type": "analytical",
+      "domain": "business",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 2,
+          "reason": "Limited governance detail in provided documents"
+        }
+      ],
+      "expected_answer": "Microsoft operates under Board oversight with management accountable for strategic execution."
+    },
+    {
+      "query_id": "Q119",
+      "query_text": "How does document retrieval performance vary by query domain in evaluation?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 4,
+          "reason": "Tax documents tend to be structured"
+        },
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 4,
+          "reason": "Financial documents have clear metrics"
+        }
+      ],
+      "expected_answer": "Structured financial/tax content retrieves better than narrative business strategy content."
+    },
+    {
+      "query_id": "Q120",
+      "query_text": "What evaluation metrics best capture retrieval quality for complex queries?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "031988d7-3ba3-4f6c-a908-6e456e87e958",
+          "relevance_score": 3,
+          "reason": "Complex financial accounting queries need NDCG"
+        }
+      ],
+      "expected_answer": "NDCG@10 and Recall@10 better capture multi-faceted answer requirements than Precision@1."
+    },
+    {
+      "query_id": "Q121",
+      "query_text": "How should query difficulty be reflected in performance targets?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 4,
+          "reason": "Operational queries more precise than strategic ones"
+        }
+      ],
+      "expected_answer": "Easy queries should achieve 80%+ precision, medium 70%, hard 60% reflecting complexity."
+    },
+    {
+      "query_id": "Q122",
+      "query_text": "What minimum recall level ensures comprehensive answer coverage?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "01b13bb8-7268-4158-8dac-8c2026e7d7eb",
+          "relevance_score": 4,
+          "reason": "Multi-part questions need high recall"
+        }
+      ],
+      "expected_answer": "Recall@10 of 70%+ ensures users see most relevant documents for complete understanding."
+    },
+    {
+      "query_id": "Q123",
+      "query_text": "How do embedding model choice and chunking strategy interact?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "00083a02-f7c6-4c16-90fc-baece182145b",
+          "relevance_score": 2,
+          "reason": "Document structure impacts retrieval"
+        }
+      ],
+      "expected_answer": "Larger chunks suit semantic embeddings; smaller chunks work with keyword matching."
+    },
+    {
+      "query_id": "Q124",
+      "query_text": "What trade-offs exist between retrieval latency and quality?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "fe97a9f7-18f5-45a5-ab78-905bbde361d1",
+          "relevance_score": 2,
+          "reason": "Real-time requirements impact search configuration"
+        }
+      ],
+      "expected_answer": "Reranking improves quality 10-15% but adds 200-500ms latency vs simple retrieval."
+    },
+    {
+      "query_id": "Q125",
+      "query_text": "How should evaluation be adapted for production monitoring vs research?",
+      "query_type": "meta",
+      "domain": "meta",
+      "difficulty": "hard",
+      "relevant_documents": [
+        {
+          "doc_id": "021344f5-9f97-47d8-ba96-16ef20d0b975",
+          "relevance_score": 2,
+          "reason": "Production systems need continuous monitoring"
+        }
+      ],
+      "expected_answer": "Production needs real-time metrics on sample queries; research uses full offline evaluation."
+    }
+  ],
+  "evaluation_guide": {
+    "relevance_scoring": {
+      "5": "Perfectly relevant - directly answers query, contains exact information needed",
+      "4": "Highly relevant - strong match, contains information that substantially answers query",
+      "3": "Moderately relevant - partial match, contains some useful context or related info",
+      "2": "Weakly relevant - tangentially related, might help but doesn't directly address query",
+      "1": "Not relevant - no meaningful connection to query",
+      "0": "Irrelevant - explicitly contradicts or unrelated to query"
+    },
+    "metrics_explanation": {
+      "precision@k": "Of the top-k retrieved documents, what percentage are actually relevant?",
+      "recall@k": "Of all relevant documents, what percentage appear in the top-k retrieved?",
+      "mrr": "Mean Reciprocal Rank - position of first relevant result (1/position average)",
+      "ndcg": "Normalized Discounted Cumulative Gain - considers ranking quality and relevance"
+    },
+    "usage_instructions": [
+      "1. For each query, retrieve documents from your Qdrant index",
+      "2. Compare retrieved documents against 'relevant_documents' list",
+      "3. Calculate precision@k for k=[1,3,5,10]",
+      "4. Calculate recall@k for k=[1,3,5,10]",
+      "5. Track performance across difficulty levels and domains",
+      "6. Identify weak areas needing embedding/reranking optimization"
+    ]
+  },
+  "statistics": {
+    "by_domain": {
+      "financial": 28,
+      "tax": 24,
+      "business": 28,
+      "technology": 16,
+      "environmental": 8,
+      "social_impact": 6,
+      "security": 5,
+      "meta": 4
+    },
+    "by_difficulty": {
+      "easy": 50,
+      "medium": 50,
+      "hard": 25
+    },
+    "by_query_type": {
+      "factual": 48,
+      "strategic": 14,
+      "analytical": 16,
+      "product": 10,
+      "procedural": 12,
+      "competitive_analysis": 4,
+      "operational": 4,
+      "tax_info": 3,
+      "tax_procedure": 6,
+      "tax_accounting": 3,
+      "environmental": 1,
+      "social_impact": 2,
+      "comparative_analysis": 1,
+      "meta": 1
+    }
+  }
+}

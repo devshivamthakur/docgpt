@@ -3,7 +3,7 @@ import os
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from app.core.constants import PROVIDER_OPENAI
+from app.core.constants import PROVIDER_OPENAI, PROVIDER_OPENAI_COMPATIBLE
 
 
 class Settings(BaseSettings):
@@ -32,20 +32,29 @@ class Settings(BaseSettings):
     QDRANT_URL: str = ""
     GEMINI_MODEL: str = ""
     GEMINI_API_KEY: str = ""
+    GEMINI_CHAT_MODEL: str = ""
 
     # ── Computed ───────────────────────────────────────────────────────
     @computed_field
     @property
     def selected_model(self) -> str:
         """Return the active model name based on the current provider."""
-        if self.model_provider == PROVIDER_OPENAI:
+        if self.model_provider in (PROVIDER_OPENAI, PROVIDER_OPENAI_COMPATIBLE):
             return self.OPENAI_MODEL_NAME
-        return self.GEMINI_MODEL
+        return self.GEMINI_CHAT_MODEL
 
     # ── Langfuse Observability ─────────────────────────────────────────
     LANGFUSE_SECRET_KEY: str = ""
     LANGFUSE_PUBLIC_KEY: str = ""
     LANGFUSE_HOST: str = "https://us.cloud.langfuse.com"
+
+    # ── Email Settings ────────────────────────────────────────────────
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@docgpt.com"
+    ADMIN_EMAIL: str = "admin@docgpt.com"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", env_prefix="")
 

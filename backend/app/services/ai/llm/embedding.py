@@ -31,11 +31,55 @@ FALLBACK_EMBEDDING_MODELS: list[str] = [
 ]
 
 
-def _create_hf_embedding(model_name: str) -> HuggingFaceEndpointEmbeddings:
+class RobustHuggingFaceEndpointEmbeddings(HuggingFaceEndpointEmbeddings):
+    """Subclass of HuggingFaceEndpointEmbeddings that automatically retries failed API calls."""
+
+    @retry(
+        retry=retry_if_exception_type((HfHubHTTPError, Exception)),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1.5, min=1, max=15),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    def embed_documents(self, texts: list[str]) -> list[list[float]]:
+        return super().embed_documents(texts)
+
+    @retry(
+        retry=retry_if_exception_type((HfHubHTTPError, Exception)),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1.5, min=1, max=15),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    def embed_query(self, text: str) -> list[float]:
+        return super().embed_query(text)
+
+    @retry(
+        retry=retry_if_exception_type((HfHubHTTPError, Exception)),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1.5, min=1, max=15),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    async def aembed_documents(self, texts: list[str]) -> list[list[float]]:
+        return await super().aembed_documents(texts)
+
+    @retry(
+        retry=retry_if_exception_type((HfHubHTTPError, Exception)),
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=1.5, min=1, max=15),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    async def aembed_query(self, text: str) -> list[float]:
+        return await super().aembed_query(text)
+
+
+def _create_hf_embedding(model_name: str) -> RobustHuggingFaceEndpointEmbeddings:
     """Instantiate a HuggingFace endpoint embedding model."""
     if not settings.HUGGINGFACE_API_TOKEN:
         raise ValueError("HUGGINGFACE_API_TOKEN is not configured")
-    return HuggingFaceEndpointEmbeddings(
+    return RobustHuggingFaceEndpointEmbeddings(
         repo_id=model_name,
         huggingfacehub_api_token=settings.HUGGINGFACE_API_TOKEN,
     )

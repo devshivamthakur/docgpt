@@ -159,25 +159,28 @@ class LLM:
 
         logger.info(
             "Initializing OpenAI-compatible: model=%s, base_url=%s",
-            self.model_name,
+            self.model_name if self.model_name else settings.OPENAI_MODEL_NAME,
             base_url,
         )
         return ChatOpenAI(
-            model_name=self.model_name,
+            model_name=self.model_name
+            if self.model_name
+            else settings.OPENAI_MODEL_NAME,
             openai_api_key=settings.OPENAI_API_KEY or "no-key-required",
             openai_api_base=base_url,
             temperature=self.temperature,
             timeout=self.request_timeout,
             max_retries=self.max_retries,
+            streaming=self.streaming,
         )
 
     def _init_gemini_model(self) -> Any:
         from langchain_google_genai import ChatGoogleGenerativeAI
 
         logger.info(
-            "Initializing OpenAI: model=%s, base_url=%s",
-            self.model_name,
+            "Initializing geminit: model=%s, passed model=%s",
             settings.GEMINI_MODEL or "(default)",
+            self.model_name,
         )
         return ChatGoogleGenerativeAI(
             model=self.model_name if self.model_name else settings.GEMINI_MODEL,

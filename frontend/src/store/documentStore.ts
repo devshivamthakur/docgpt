@@ -49,6 +49,8 @@ export interface DocumentState {
   liveProgress: Record<number, ProgressPayload>;
   /** Storage usage info */
   storageUsage: StorageUsage | null;
+  /** Map of document-id → boolean indicating if document is currently being deleted */
+  deletingIds: Record<number, boolean>;
 
   /* ── Actions ──────────────────────────────────────────────────── */
   fetchDocuments: () => Promise<void>;
@@ -95,6 +97,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   error: null,
   liveProgress: {},
   storageUsage: null,
+  deletingIds: {},
 
   fetchDocuments: async () => {
     set({ isLoading: true, error: null });
@@ -160,17 +163,35 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   },
 
   deleteDocument: async (id: number) => {
-    set({ error: null });
+    if (get().deletingIds[id]) return;
+
+    set((s) => ({
+      deletingIds: { ...s.deletingIds, [id]: true },
+      error: null,
+    }));
+
     try {
       await api.delete(`/documents/${id}`);
-      set((s) => ({
-        documents: s.documents.filter((d) => d.id !== id),
-        total: s.total - 1,
-      }));
+      set((s) => {
+        const nextDeleting = { ...s.deletingIds };
+        delete nextDeleting[id];
+        return {
+          documents: s.documents.filter((d) => d.id !== id),
+          total: s.total - 1,
+          deletingIds: nextDeleting,
+        };
+      });
       // Refresh storage after deletion
       get().fetchStorageUsage();
     } catch (err: any) {
-      set({ error: err.normalizedMessage || 'Failed to delete document' });
+      set((s) => {
+        const nextDeleting = { ...s.deletingIds };
+        delete nextDeleting[id];
+        return {
+          error: err.normalizedMessage || 'Failed to delete document',
+          deletingIds: nextDeleting,
+        };
+      });
     }
   },
 

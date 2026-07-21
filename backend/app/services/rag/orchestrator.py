@@ -32,6 +32,7 @@ from app.services.rag.Tools.tools import tools
 from app.services.rag.streaming import StreamManager, StreamTimeoutError
 from app.services.rag.citation import CitationExtractor
 from app.services.rag.prompt.builder import PromptBuilder
+from app.services.rag.source_tracking import SourceTracker
 from app.services.rag.query_processor.processor import QueryProcessor
 from app.services.rag.retriever.retrieval import RetrievalPipeline
 from app.services.rag.utils import extract_chunk_content
@@ -72,7 +73,10 @@ class RagOrchestrator:
         """Main LLM for answer generation."""
         if self._llm is None:
             self._llm = LLM(
-                temperature=0.3, provider=settings.model_provider, streaming=True
+                temperature=0.3,
+                provider=settings.model_provider,
+                streaming=True,
+                model_name=settings.GEMINI_CHAT_MODEL,
             ).llm
         return self._llm
 
@@ -159,26 +163,26 @@ class RagOrchestrator:
         # ── Step 0: Semantic cache short-circuit (Strategy 1) ─────────
         llm_model = settings.selected_model
         cached_answer = await self._try_llm_short_circuit(query, llm_model)
-        if cached_answer is not None:
-            logger.info(
-                "Semantic cache HIT for conv_id=%s — skipping RAG pipeline",
-                conversation_id,
-            )
-            yield StreamManager.sources_event([])
-            yield StreamManager.done_event(cached_answer, [])
-            # Still persist the Q&A pair in the background
-            from app.services.rag.tasks import store_messages_task
+        # if cached_answer is not None:
+        #     logger.info(
+        #         "Semantic cache HIT for conv_id=%s — skipping RAG pipeline",
+        #         conversation_id,
+        #     )
+        #     yield StreamManager.sources_event([])
+        #     yield StreamManager.done_event(cached_answer, [])
+        #     # Still persist the Q&A pair in the background
+        #     from app.services.rag.tasks import store_messages_task
 
-            asyncio.create_task(
-                store_messages_task(
-                    conversation_id=conversation_id,
-                    user_id=user_id,
-                    user_message=query,
-                    assistant_content=cached_answer,
-                    sources=[],
-                )
-            )
-            return
+        #     asyncio.create_task(
+        #         store_messages_task(
+        #             conversation_id=conversation_id,
+        #             user_id=user_id,
+        #             user_message=query,
+        #             assistant_content=cached_answer,
+        #             sources=[],
+        #         )
+        #     )
+        #     return
 
         # ── Step 1: Load conversation context ─────────────────────────
         history, summary = await self._load_conversation_context(
@@ -199,6 +203,7 @@ class RagOrchestrator:
         full_content = ""
         start_time = time.monotonic()
         last_token_time = start_time
+        source_tracker = SourceTracker()
 
         try:
             # Build system prompt with conversation summary
@@ -225,13 +230,16 @@ class RagOrchestrator:
             # tool calls vs. final answer content
             has_tool_calls = False
 
-            # Inject user_id into RunnableConfig so the @tool can read it
+            # Inject user_id, db, and history into RunnableConfig so the @tool can read it
             run_config = {
                 **langfuse_config,
                 "recursion_limit": self.config.agent_recursion_limit,
                 "configurable": {
                     **(langfuse_config.get("configurable") or {}),
                     "user_id": user_id,
+                    "db": db,
+                    "history": history,
+                    "source_tracker": source_tracker,
                 },
             }
 
@@ -254,7 +262,6 @@ class RagOrchestrator:
                     )
 
                 event_type = event["event"]
-                print(event_type)
 
                 # Reset on each model invocation
                 if event_type == "on_chat_model_start":
@@ -276,10 +283,33 @@ class RagOrchestrator:
                                 "token", {"content": content}
                             )
 
+                elif event_type == "on_chat_model_end":
+                    output = event.get("data", {}).get("output")
+                    if output and not has_tool_calls:
+                        msg = None
+                        if hasattr(output, "generations"):
+                            try:
+                                msg = output.generations[0].message
+                            except IndexError, AttributeError:
+                                pass
+                        elif hasattr(output, "content"):
+                            msg = output
+
+                        if msg:
+                            content = extract_chunk_content(
+                                getattr(msg, "content", None)
+                            )
+                            if content and not full_content:
+                                full_content = content
+                                last_token_time = now
+                                yield StreamManager._sse_event(
+                                    "token", {"content": content}
+                                )
+
                 # Log tool usage for observability
                 elif event_type == "on_tool_start":
                     tool_input = event["data"]
-                    logger.info(
+                    logger.debug(
                         "Agent calling tool=%s conv_id=%s input=%.100s",
                         event.get("name", ""),
                         conversation_id,
@@ -289,7 +319,11 @@ class RagOrchestrator:
                 # Track tool completion — sources are accumulated
                 # in the module-level _last_sources list inside the tool
                 elif event_type == "on_tool_end":
-                    logger.debug(
+                    tool_output = event["data"]["output"]
+                    if tool_output.name == "retrieve_documents":
+                        pass
+
+                    logger.info(
                         "Tool %s finished conv_id=%s",
                         event.get("name", ""),
                         conversation_id,
@@ -310,9 +344,19 @@ class RagOrchestrator:
             )
             return
 
+        # ── Step 3.5: Validation and fallback for empty content ───────
+        full_content_originally_empty = not full_content.strip()
+        if full_content_originally_empty:
+            logger.warning(
+                "Agent returned an empty response for conv_id=%s. Using fallback message.",
+                conversation_id,
+            )
+            full_content = "I'm sorry, I was unable to generate a response. Please try asking your question again or check your model configuration."
+            yield StreamManager._sse_event("token", {"content": full_content})
+
         # ── Step 4: Extract citations from the agent's final answer ───
-        sources = []
-        cited = self.citation_extractor.extract(full_content, sources)
+        retrieved_sources = source_tracker.get_sources()
+        cited = self.citation_extractor.extract(full_content, retrieved_sources)
         sources_data = [
             {
                 "document_id": s.document_id,
@@ -330,7 +374,10 @@ class RagOrchestrator:
         yield StreamManager.done_event(full_content, sources_data)
 
         # ── Step 7b: Store in semantic cache for future short-circuits ─
-        asyncio.create_task(self._try_save_llm_response(query, llm_model, full_content))
+        if not full_content_originally_empty:
+            asyncio.create_task(
+                self._try_save_llm_response(query, llm_model, full_content)
+            )
 
         # ── Step 8: Fire background tasks ─────────────────────────────
         from app.services.rag.tasks import store_messages_task, generate_summary_task

@@ -20,7 +20,7 @@ class TextChunker:
     paragraph and sentence boundaries.
     """
 
-    def __init__(self, chunk_size: int = 550, overlap: int = 80) -> None:
+    def __init__(self, chunk_size: int = 1000, overlap: int = 200) -> None:
         self.chunk_size = chunk_size
         self.overlap = overlap
         self._splitter = RecursiveCharacterTextSplitter(

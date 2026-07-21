@@ -1,3 +1,4 @@
+import asyncio
 import os
 import logging
 
@@ -104,9 +105,12 @@ async def upload_document(
     )
 
     # ── Save file to disk ───────────────────────────────────────────
-    os.makedirs(os.path.dirname(storage_path), exist_ok=True)
-    with open(storage_path, "wb") as f:
-        f.write(contents)
+    def _save_file_sync():
+        os.makedirs(os.path.dirname(storage_path), exist_ok=True)
+        with open(storage_path, "wb") as f:
+            f.write(contents)
+
+    await asyncio.to_thread(_save_file_sync)
 
     # ── Mark as uploaded & queue processing ─────────────────────────
     await service.mark_uploaded(doc.id)
@@ -176,7 +180,6 @@ async def delete_document(
     current_user: User = Depends(get_current_user),
 ):
     """Delete a document and its file."""
-    print(f"Deleting document {doc_id} for user {current_user}")
     service = DocumentService(db)
     await service.delete_document(doc_id, current_user.id)
     await invalidate_document_caches(user_id=current_user.id)
@@ -251,38 +254,48 @@ async def document_progress_ws(
 
     After uploading a document, the frontend connects here to receive
     live status updates (parsing → chunking → embedding → indexing → ready).
+
+    Authentication is done via the first WebSocket message
+    (``{"type": "auth", "token": "..."}``) rather than a query param,
+    to avoid leaking tokens in server logs or referrer headers.
     """
-    # Verify the document exists (without auth middleware — token sent as query param)
-    token = websocket.query_params.get("token")
-    if not token:
-        await websocket.close(code=4001, reason="Missing token")
-        return
-
-    # Validate token and check document ownership
-    from app.core.security import decode_token
-    from jose import JWTError
+    # Accept the connection first — we authenticate via the first message
+    await manager.connect(doc_id, websocket)
 
     try:
-        payload = decode_token(token)
-        user_id = int(payload.get("sub", 0))
-    except JWTError, ValueError, TypeError:
-        await websocket.close(code=4001, reason="Invalid token")
-        return
+        # Wait for the auth message (timeout to prevent hung connections)
+        message = await asyncio.wait_for(websocket.receive_json(), timeout=10.0)
 
-    service = DocumentService(db)
-    try:
-        doc = await service.get_document(doc_id)
-    except Exception:
-        await websocket.close(code=4004, reason="Document not found")
-        return
+        if not isinstance(message, dict) or message.get("type") != "auth":
+            await websocket.close(code=4001, reason="Invalid auth handshake")
+            return
 
-    if doc.user_id != user_id:
-        await websocket.close(code=4004, reason="Document not found")
-        return
+        token = message.get("token")
+        if not token:
+            await websocket.close(code=4001, reason="Missing token")
+            return
 
-    # ── Wrap everything in try so accept errors are caught ─────────
-    try:
-        await manager.connect(doc_id, websocket)
+        # Validate token and check document ownership
+        from app.core.security import decode_token
+        from jose import JWTError
+
+        try:
+            payload = decode_token(token)
+            user_id = int(payload.get("sub", 0))
+        except JWTError, ValueError, TypeError:
+            await websocket.close(code=4001, reason="Invalid token")
+            return
+
+        service = DocumentService(db)
+        try:
+            doc = await service.get_document(doc_id)
+        except Exception:
+            await websocket.close(code=4004, reason="Document not found")
+            return
+
+        if doc.user_id != user_id:
+            await websocket.close(code=4004, reason="Document not found")
+            return
 
         # Send current state immediately
         await websocket.send_json(
@@ -300,6 +313,9 @@ async def document_progress_ws(
         # Listen for Redis pub/sub updates from the ARQ worker
         await listen_redis_progress(doc_id, websocket)
 
+    except asyncio.TimeoutError:
+        logger.warning("WS auth timeout for document %s", doc_id)
+        await websocket.close(code=4001, reason="Auth timeout")
     except WebSocketDisconnect:
         logger.info("WS disconnected for document %s", doc_id)
     except RuntimeError as e:

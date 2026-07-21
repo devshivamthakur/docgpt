@@ -104,11 +104,13 @@ const PROCESSING_STATUSES: DocumentStatus[] = ['uploading', 'uploaded', 'parsing
 
 function DocumentRow({
   doc,
+  isDeleting,
   onChat,
   onDelete,
   onReprocess,
 }: {
   doc: Document;
+  isDeleting?: boolean;
   onChat: (id: number) => void;
   onDelete: (id: number) => void;
   onReprocess: (id: number) => void;
@@ -119,7 +121,7 @@ function DocumentRow({
   const isProcessing = PROCESSING_STATUSES.includes(doc.status);
 
   return (
-    <div className="group flex items-center gap-4 border-b border-slate-800/60 px-4 py-3.5 transition hover:bg-slate-800/40 sm:px-6">
+    <div className={`group flex items-center gap-4 border-b border-slate-800/60 px-4 py-3.5 transition hover:bg-slate-800/40 sm:px-6 ${isDeleting ? 'opacity-50 pointer-events-none' : ''}`}>
       {/* Icon */}
       <div className="hidden shrink-0 sm:block">
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-800 text-slate-500">
@@ -180,7 +182,8 @@ function DocumentRow({
         {isReady && (
           <button
             onClick={() => onChat(doc.id)}
-            className="rounded-lg p-2 text-emerald-400/60 transition hover:bg-emerald-500/15 hover:text-emerald-400"
+            disabled={isDeleting}
+            className="rounded-lg p-2 text-emerald-400/60 transition hover:bg-emerald-500/15 hover:text-emerald-400 disabled:opacity-40"
             title="Chat with this document"
           >
             <MessageSquare className="h-4 w-4" />
@@ -189,7 +192,8 @@ function DocumentRow({
         {isFailed && (
           <button
             onClick={() => onReprocess(doc.id)}
-            className="rounded-lg p-2 text-amber-400/60 transition hover:bg-amber-500/15 hover:text-amber-400"
+            disabled={isDeleting}
+            className="rounded-lg p-2 text-amber-400/60 transition hover:bg-amber-500/15 hover:text-amber-400 disabled:opacity-40"
             title="Retry processing"
           >
             <RefreshCw className="h-4 w-4" />
@@ -197,10 +201,15 @@ function DocumentRow({
         )}
         <button
           onClick={() => onDelete(doc.id)}
-          className="rounded-lg p-2 text-red-400/40 transition hover:bg-red-500/15 hover:text-red-400"
+          disabled={isDeleting}
+          className="rounded-lg p-2 text-red-400/40 transition hover:bg-red-500/15 hover:text-red-400 disabled:opacity-40"
           title="Delete document"
         >
-          <Trash2 className="h-4 w-4" />
+          {isDeleting ? (
+            <Loader2 className="h-4 w-4 animate-spin text-red-400" />
+          ) : (
+            <Trash2 className="h-4 w-4" />
+          )}
         </button>
       </div>
     </div>
@@ -355,6 +364,7 @@ function DocumentListPage() {
   const fetchDocumentsPage = useDocumentStore((s) => s.fetchDocumentsPage);
   const deleteDocument = useDocumentStore((s) => s.deleteDocument);
   const reprocessDocument = useDocumentStore((s) => s.reprocessDocument);
+  const deletingIds = useDocumentStore((s) => s.deletingIds);
 
   const [page, setPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -564,6 +574,7 @@ function DocumentListPage() {
                 <DocumentRow
                   key={doc.id}
                   doc={doc}
+                  isDeleting={!!deletingIds[doc.id]}
                   onChat={handleChat}
                   onDelete={handleDelete}
                   onReprocess={handleReprocess}

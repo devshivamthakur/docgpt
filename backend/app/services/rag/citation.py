@@ -39,43 +39,42 @@ class CitationExtractor:
         text: str,
         sources: list[SourceItem],
     ) -> list[SourceItem]:
-        """Find which of the given sources are cited in the generated text.
+        """Find which sources should be surfaced to the user.
 
-        Args:
-            text: The LLM-generated answer text.
-            sources: The full list of retrieved source items.
-
-        Returns:
-            A subset of ``sources`` that are cited in the text, in order
-            of first appearance.
+        The frontend expects a non-empty source list whenever retrieval happened.
+        To keep the UX reliable, we return the retrieved sources when no explicit
+        citation pattern is found in the answer, while still preserving the
+        existing explicit-citation behavior when the model does cite them.
         """
-        if not text or not sources:
+        if not sources:
             return []
+
+        if not text:
+            return list(sources)
 
         cited: list[SourceItem] = []
         seen_ids: set[tuple[int, int | None]] = set()
 
-        # Phase 1: Extract explicit [Source: ...] citations
         explicit_citations = self._extract_explicit_citations(text)
 
-        # Phase 2: Map citations back to source items
         for src in sources:
             key = (src.document_id, src.chunk_index)
             if key in seen_ids:
                 continue
 
-            # Check explicit citations
             if self._is_explicitly_cited(src, explicit_citations):
                 seen_ids.add(key)
                 cited.append(src)
                 continue
 
-            # Fallback: check plain name mention (slower, skip if already matched)
             if self._is_name_mentioned(text, src):
                 seen_ids.add(key)
                 cited.append(src)
 
-        return cited
+        if cited:
+            return cited
+
+        return list(sources)
 
     def _extract_explicit_citations(self, text: str) -> list[tuple[str, int | None]]:
         """Parse all ``[Source: name (page N)]`` tags from the text.
